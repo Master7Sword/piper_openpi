@@ -1,0 +1,7 @@
+openpi/checkpoints/
+openpi/.venv/
+openpi/wandb/
+openpi/third_party/
+openpi/.github/
+openpi/.vscode/
+openpi/.git_bak

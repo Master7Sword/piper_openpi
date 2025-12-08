@@ -1,0 +1,89 @@
+export ALL_PROXY=127.0.0.1:7897
+-i https://pypi.tuna.tsinghua.edu.cn/simple
+
+realsense-viewer
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer_only --start_episode 0
+
+python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer_only/episode0
+
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_open_drawer_only_lora/open_drawer_only/29999 \
+                            --config_name pi05_open_drawer_only_lora
+
+-------------------------------------------------------------------------------------------------------------------------
+
+uv run scripts/compute_norm_stats.py --config-name pi05_put_item_in_drawer_lora
+
+python piper_data_collect.py --task_name put_item_in_drawer --start_episode 0
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer --start_episode 0
+
+python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer/episode0
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual_replay.py   \
+--checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_put_item_in_drawer_lora/put_item_in_drawer_30fps/24000  \
+--replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer/episode0 \
+--config_name pi05_put_item_in_drawer_lora
+
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual.py \
+    --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_put_item_in_drawer_lora/put_item_in_drawer_30fps/24000  \
+    --config_name pi05_put_item_in_drawer_lora
+
+------------------------------------------------------------------------------------------------------------------------
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer --start_episode 0
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual_replay.py \
+    --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_open_drawer_lora/open_drawer/28000 \
+    --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer/episode0 \
+    --config_name pi05_open_drawer_lora
+
+python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer/episode16
+python replay_ee.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer/episode16
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual.py \
+    --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_open_drawer_lora/open_drawer/28000 \
+    --config_name pi05_open_drawer_lora
+
+
+python infer_piper_single_replay_adapter.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_droid_adapter/4999 \
+    --config_name pi05_droid_adapter \
+    --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer/episode0
+
+
+remember to make sure the correct order of left, front and right cameras (in convert.py)
+can_arm1 is right, can_arm2 is left 
+cam0 -> left, cam1 -> top, cam2 -> right
+
+
+
+infer: 
+
+final actions: [ 3.99274479e+01  7.10374874e+01 -7.37351175e+01 -8.84721035e+00
+  4.59496134e+01 -2.64241905e+00  8.22756054e+01 -4.04604792e+01
+  3.86621191e+00 -2.27441743e+00 -8.59941873e+01 -5.50234607e+00
+  7.41311857e+01  4.23974622e+00 ]
+
+replay: 
+
+final actions: [ 4.26051952e+01  6.67530459e+01 -7.44883307e+01 -7.04660741e+00
+  5.12016911e+01  7.08982952e+00  1.99014547e+00 -3.96627304e+01
+  2.93606750e+00 -4.06176587e+00  1.21578157e+01  4.53492052e+00
+ -1.87206483e+01  8.92861629e-01 ]
+
+-------------------------------------------------------------------------------------
+
+final actions: [ 3.98939656e+01  7.81138960e+01 -7.33749966e+01  1.14219224e+00
+  4.58226829e+01 -1.28192095e+01  6.99507954e+01 -4.04346604e+01
+  2.67202247e+01 -8.79611984e+00 -7.64768607e+01 -1.89920811e+01
+  2.49303272e+01  3.40915854e+01]
+
+
+final actions: [ 4.25180211e+01  1.04643099e+02 -7.41758220e+01  5.14029801e+00
+  4.84165576e+01 -6.80176257e+00  7.93011072e+01 -3.98359648e+01
+  3.56946410e+00 -4.67772428e+00  1.17814768e+01  4.96798955e+00
+ -1.90810989e+01  8.97825855e-01 ]
