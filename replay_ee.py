@@ -1,29 +1,13 @@
-import collections
 import os
-import cv2
-import torch
 import numpy as np
 import time
 from piper_sdk import *
-import pyrealsense2 as rs
-
-# 添加模块导入路径...
-import sys
-import glob
 import h5py
-
-# script_dir = os.path.dirname(__file__)
-# project_root = os.path.abspath(os.path.join(script_dir, '..', '..'))
-# sys.path.insert(0, project_root)
-# sys.path.insert(0, os.path.join(project_root, 'mozihao', 'openpi', 'src')) 
-# sys.path.insert(0, os.path.join(script_dir, 'act_tele'))
-
 import time 
 import argparse
-from scipy.interpolate import interp1d
 
 
-def piper_step_dual(piper_right, piper_left, end_pose_t, joints_t):
+def piper_step_dual(piper_right, piper_left, end_pose_t):
     """
     处理14维action，控制双臂：
     action[0:6]: can_arm1关节
@@ -34,10 +18,11 @@ def piper_step_dual(piper_right, piper_left, end_pose_t, joints_t):
     start_time = time.time()
     try:
         end_pose_right = [round(x * 1000) for x in end_pose_t[0:6]]
-        gripper_right = round(joints_t[6] * 1000)
+        gripper_right = round(end_pose_t[6] * 1000)
+        end_pose_left = [round(x * 1000) for x in end_pose_t[7:13]]
+        gripper_left = round(end_pose_t[13] * 1000)
+
         gripper_right = 0 if abs(gripper_right) < 40000 else gripper_right
-        end_pose_left = [round(x * 1000) for x in end_pose_t[6:12]]
-        gripper_left = round(joints_t[13] * 1000)
         gripper_left = 0 if abs(gripper_left) < 30000 else gripper_left
 
         piper_right.MotionCtrl_2(0x01, 0x00, 20, 0x00)
@@ -51,16 +36,6 @@ def piper_step_dual(piper_right, piper_left, end_pose_t, joints_t):
 
     except Exception as e:
         raise RuntimeError(f"Piper dual-arm command failed: {e}")
-    
-    # counter = 0
-    # while (piper_right.GetArmStatus().arm_status.motion_status == 0x01 or
-    #        piper_left.GetArmStatus().arm_status.motion_status == 0x01):
-    #     time.sleep(0.0001)
-    #     counter += 1
-    #     if counter > 10000:
-    #         print("Warning: Piper dual-arm motion taking too long.")
-    #         break
-    # print(f"counter: {counter}")
 
     elapsed = time.time() - start_time
     print(f'dual-arm actual fps: {1./elapsed:.4f}')
@@ -71,12 +46,12 @@ def piper_step_dual(piper_right, piper_left, end_pose_t, joints_t):
         time.sleep(frame_duration - elapsed)
 
 
-def piper_step_chunk_dual(piper_right, piper_left, end_pose_t, joints_t, t, n_steps=50):
+def piper_step_chunk_dual(piper_right, piper_left, end_pose_t, t):
     t = t + 1
 
     # print(f'Dual actions: {action}')
     # time.sleep(1)
-    piper_step_dual(piper_right, piper_left, end_pose_t, joints_t)
+    piper_step_dual(piper_right, piper_left, end_pose_t)
 
     counter = 0
     temp = time.time()
@@ -93,22 +68,13 @@ def piper_step_chunk_dual(piper_right, piper_left, end_pose_t, joints_t, t, n_st
 
 
 def main(args):
-
-    # Replay mode: use pre-saved aligned data and images instead of live camera/robot
     if args.replay_episode_dir is not None:
         replay_dir = args.replay_episode_dir
         print(f"Running in replay mode with directory: {replay_dir}")
 
-        # Load aligned robot states H5 file
         aligned_h5_path = os.path.join(replay_dir, "robot_data_aligned.h5")
         f_robot = h5py.File(aligned_h5_path, 'r')
-        joints = f_robot['joints'][:]
         end_pose = f_robot['end_pose'][:]  
-
-        # Load all replay frame image paths
-        cam0_images = sorted(glob.glob(os.path.join(replay_dir, "frames", "cam0", "*.jpg")))
-        cam1_images = sorted(glob.glob(os.path.join(replay_dir, "frames", "cam1", "*.jpg")))
-        cam2_images = sorted(glob.glob(os.path.join(replay_dir, "frames", "cam2", "*.jpg")))
 
         num_frames = end_pose.shape[0]
         print(num_frames)
@@ -138,21 +104,8 @@ def main(args):
 
         t = 0
         while t < num_frames:
-            # Load synced images from replay frames
-            # left_img = cv2.imread(cam0_images[t])
-            # top_img = cv2.imread(cam1_images[t])
-            # right_img = cv2.imread(cam2_images[t])
-            # left_img = cv2.resize(left_img, (224, 224))
-            # top_img = cv2.resize(top_img, (224, 224))
-            # right_img = cv2.resize(right_img, (224, 224))
-
-            # print(f"Replay frame {t} observation state:", joints[t])
-
             end_pose_t = np.array(end_pose[t])
-            joints_t = np.array(joints[t])
-            # print(action_chunk.shape)
-
-            t = piper_step_chunk_dual(piper_right, piper_left, end_pose_t, joints_t, t, n_steps=1)
+            t = piper_step_chunk_dual(piper_right, piper_left, end_pose_t, t, n_steps=1)
 
         f_robot.close()
         return

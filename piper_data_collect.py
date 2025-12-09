@@ -47,7 +47,6 @@ class RobotDataProcess(mp.Process):
                                  log_to_file=False,
                                  log_file_path=None)
         piper.ConnectPort()
-        # piper.EnableFkCal()
         return piper
 
     def _get_single_arm_data(self, piper_instance):
@@ -70,14 +69,15 @@ class RobotDataProcess(mp.Process):
             gripper_msg.gripper_state.grippers_angle / 1000.0,
         ])
 
-        # 6维: XYZ + RPY
+        # 7维: XYZ + RPY + 1个夹爪
         end_pose_arr = np.array([
             end_pose_msg.end_pose.X_axis / 1000.0,
             end_pose_msg.end_pose.Y_axis / 1000.0,
             end_pose_msg.end_pose.Z_axis / 1000.0,
             end_pose_msg.end_pose.RX_axis / 1000.0,
             end_pose_msg.end_pose.RY_axis / 1000.0,
-            end_pose_msg.end_pose.RZ_axis / 1000.0
+            end_pose_msg.end_pose.RZ_axis / 1000.0, 
+            gripper_msg.gripper_state.grippers_angle / 1000.0,
         ])
         
         return joints_arr, end_pose_arr
@@ -93,11 +93,10 @@ class RobotDataProcess(mp.Process):
         h5_path = os.path.join(self.episode_path, "robot_data.h5")
         robot_file = h5py.File(h5_path, 'w')
 
-        # --- 关键修改点：维度翻倍 ---
-        # 关节：7 + 7 = 14维
+        # 关节
         joints_ds = robot_file.create_dataset('joints', shape=(0, 14), maxshape=(None, 14), dtype='f8')
-        # 末端：6 + 6 = 12维
-        ee_ds = robot_file.create_dataset('end_pose', shape=(0, 12), maxshape=(None, 12), dtype='f8')
+        # 末端
+        ee_ds = robot_file.create_dataset('end_pose', shape=(0, 14), maxshape=(None, 14), dtype='f8')
         # 时间戳
         ts_ds = robot_file.create_dataset('timestamps', shape=(0,), maxshape=(None,), dtype='f8')
 
@@ -115,7 +114,6 @@ class RobotDataProcess(mp.Process):
 
         print("[Robot] Recording started.")
 
-        # --- 录制循环 ---
         while not self.stop_event.is_set():
             # 1. 获取两臂数据
             j1, ee1 = self._get_single_arm_data(piper1)
@@ -127,17 +125,17 @@ class RobotDataProcess(mp.Process):
             if j1 is None or j2 is None:
                 continue
 
-            # 3. 数据拼接 (Concatenation)
+            # 3. 数据拼接 
             # 结果 shape: (14,)
             joints_concat = np.concatenate((j1, j2)) 
-            # 结果 shape: (12,)
+            # 结果 shape: (14,)
             ee_concat = np.concatenate((ee1, ee2))
 
             # 4. 扩容H5 dataset
             if idx >= dataset_size:
                 dataset_size += CHUNK_SIZE
-                joints_ds.resize((dataset_size, 14)) # 注意这里是 14
-                ee_ds.resize((dataset_size, 12))     # 注意这里是 12
+                joints_ds.resize((dataset_size, 14))
+                ee_ds.resize((dataset_size, 14))    
                 ts_ds.resize((dataset_size,))
 
             # 5. 写入数据
@@ -152,7 +150,7 @@ class RobotDataProcess(mp.Process):
         # --- 结束清理 ---
         print(f"[Robot] Recording stopped. Saving {idx} frames...")
         joints_ds.resize((idx, 14))
-        ee_ds.resize((idx, 12))
+        ee_ds.resize((idx, 14))
         ts_ds.resize((idx,))
         
         robot_file.close()
@@ -179,7 +177,7 @@ class CameraDataProcess(mp.Process):
         pipelines = {}
         configs = {}
         aligns = {}
-        width, height, fps = 640, 480, 60
+        width, height, fps = 640, 480, 30
 
         # 配置 Pipeline
         for serial in serials:
@@ -218,7 +216,6 @@ class CameraDataProcess(mp.Process):
         while not self.start_event.is_set() and not self.stop_event.is_set():
             for serial in active_serials:
                 try:
-                    # 使用 try_wait 避免阻塞，只为了刷新缓冲区
                     pipelines[serial].try_wait_for_frames(timeout_ms=10)
                 except:
                     pass
@@ -251,8 +248,6 @@ class CameraDataProcess(mp.Process):
                                                        shape=(0,),
                                                        maxshape=(None,),
                                                        dtype='f8')
-
-        CHUNK_SIZE = 1000 # 写入优化
 
         while not self.stop_event.is_set():
             for serial in active_serials:
@@ -309,14 +304,14 @@ def main():
     parser.add_argument('--task_name', type=str, required=True, help='Task name')
     args = parser.parse_args()
 
-    base_path = os.path.abspath(os.path.dirname(__file__))
+    # base_path = os.path.abspath(os.path.dirname(__file__))
+    base_path = "/home/tengenx2204/workspace/mozihao"
     episode_idx = args.start_episode
-# "sequentially touch the yellow, blue and red blocks"
-    # 初始化事件
+
     start_event = mp.Event()
     stop_event = mp.Event()
 
-    # 键盘监听函数 (保持不变)
+    # 键盘监听
     def wait_key():
         try:
             import msvcrt
@@ -335,17 +330,15 @@ def main():
             return ch
 
     while True:
-        # 1. 创建文件夹
         episode_path = create_episode_folder(base_path, args.task_name, episode_idx)
         
-        # 2. 重置事件状态
         start_event.clear()
         stop_event.clear()
 
         print(f"\n=== Episode {episode_idx} Setup ===")
         print("Initializing Robot and Cameras... (Please wait)")
 
-        # 3. 立即启动进程 (此时相机开始预热，但未录制)
+        # 3. 启动进程 (此时相机开始预热，但未录制)
         robot_proc = RobotDataProcess(start_event, stop_event, episode_path)
         cam_proc = CameraDataProcess(start_event, stop_event, episode_path)
         
@@ -377,21 +370,13 @@ def main():
                     episode_idx += 1
                     break
                 time.sleep(0.1)
-        
         elif k == 'q':
             print("Quitting...")
-            # 确保即使没开始录制也能安全退出
             stop_event.set() 
             robot_proc.join()
             cam_proc.join()
             break
-        
-        else:
-            # 如果按了其他键，停止当前预热的进程，重新进入循环
-            print("Invalid key. Resetting...")
-            stop_event.set()
-            robot_proc.join()
-            cam_proc.join()
+
 
 if __name__ == "__main__":
     main()

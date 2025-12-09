@@ -10,9 +10,9 @@ import numpy as np
 def convert_dataset():
 
     # --- 1. 定义常量和路径 ---
-    original_data_dir = Path(__file__).parent / "Data/open_drawer"
-    new_dataset_root = Path(__file__).parent / "Data"
-    repo_id = "open_drawer_lerobot"
+    original_data_dir = Path("/home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer")
+    new_dataset_root = Path("/home/tengenx2204/workspace/mozihao/Data/")
+    repo_id = "put_item_in_drawer_lerobot"
     new_dataset_path = new_dataset_root / repo_id
 
     print(f"源数据目录: {original_data_dir}")
@@ -23,7 +23,7 @@ def convert_dataset():
         print(f"警告: 目录 {new_dataset_path} 已存在，将被删除以进行全新转换。")
         shutil.rmtree(new_dataset_path)
 
-    # --- 3. 定义数据集的 'features' ---
+    # --- 3. 定义features ---
     # 确定图像的尺寸
     try:
         first_demo_path = sorted(list(original_data_dir.glob("episode*")))[0]
@@ -42,12 +42,11 @@ def convert_dataset():
         "observation.images.left": {"shape": img_shape, "dtype": "image"},
         "observation.images.right": {"shape": img_shape, "dtype": "image"},
         "observation.images.top": {"shape": img_shape, "dtype": "image"},
-        # 保持定义为 32 维，下面代码会进行填充
         "observation.state": {"shape": (32,), "dtype": "float32"},
         "actions": {"shape": (32,), "dtype": "float32"},
     }
 
-    # --- 4. 创建一个新的、空的 LeRobotDataset ---
+    # --- 4. 创建空的 LeRobotDataset ---
     print("正在创建空的 LeRobotDataset...")
     dataset = LeRobotDataset.create(
         repo_id=repo_id,
@@ -89,8 +88,8 @@ def convert_dataset():
 
             for i in range(num_frames):       
                 # 1. 获取原始数据
-                raw_state = states[i]   # shape (7,)
-                raw_action = actions[i] # shape (7,)
+                raw_state = states[i]  
+                raw_action = actions[i] 
 
                 # 2. 创建 32 维的 float32 全零数组
                 padded_state = np.zeros(32, dtype=np.float32)
@@ -101,8 +100,15 @@ def convert_dataset():
                 padded_state[:dim] = raw_state
                 padded_action[:dim] = raw_action
 
+                if episode_idx <= 68:
+                    prompt = "put the yellow block into the top drawer"
+                elif episode_idx <= 117:
+                    prompt = "put the yellow block into the second drawer"
+                elif episode_idx <= 166:
+                    prompt = "put the yellow block into the third drawer"
+
                 frame = {
-                    "task": "open drawer",
+                    "task": prompt,  ## 这里记得改！！
                     "observation.state": padded_state,
                     "actions": padded_action,   
                     "observation.images.left": cv2.cvtColor(cv2.imread(str(left_images[i])), cv2.COLOR_BGR2RGB),        
@@ -111,7 +117,6 @@ def convert_dataset():
                 }
                 dataset.add_frame(frame)
 
-        # 保存当前 episode 的所有数据
         dataset.save_episode()
 
     print("所有 episodes 转换并保存完毕。")

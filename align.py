@@ -4,7 +4,7 @@ import os
 import argparse
 import shutil
 from glob import glob
-import cv2  # --- 新增: 引入 OpenCV 用于图像处理 ---
+import cv2
 
 def find_nearest_idx(array, value):
     """
@@ -46,8 +46,8 @@ def process_episode(episode_path):
     all_timestamps = f_cam[f'timestamps_{master_serial}'][:]
     
     # [::2] 进行隔帧采样，将 60fps 降为 30fps
-    target_timestamps = all_timestamps[::2]
-    # target_timestamps = all_timestamps
+    # target_timestamps = all_timestamps[::2]
+    target_timestamps = all_timestamps
     
     # --- 舍弃最后一帧 ---
     num_valid_frames = len(target_timestamps) - 1
@@ -141,7 +141,7 @@ def process_episode(episode_path):
         
         f_out.attrs['num_frames'] = num_valid_frames
         f_out.attrs['fps'] = 30
-        f_out.attrs['image_size'] = "224x224" # 更新元数据说明
+        f_out.attrs['image_size'] = "224x224" 
         f_out.attrs['description'] = "Downsampled to 30fps. Resized to 224x224. Actions are states at t+1."
 
     f_cam.close()

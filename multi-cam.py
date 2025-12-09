@@ -80,7 +80,7 @@ def main():
         print(f"\n成功启动 {len(active_serials)} 台设备。按 'q' 或 'ESC' 退出...")
 
         # ----------------------------------------------------
-        # 4. 主循环：从所有设备读取和显示
+        # 4. 从所有设备读取和显示
         # ----------------------------------------------------
         while True:
             # 存储所有摄像头的拼接图像
@@ -91,9 +91,6 @@ def main():
                 pipeline = pipelines[serial]
                 align = aligns[serial]
                 
-                # ----------------------------------------------------
-                # ** 错误修正点 **
-                # ----------------------------------------------------
                 # 1. 解包 (success, frames) 元组
                 success, frames = pipeline.try_wait_for_frames() 
                 
@@ -123,8 +120,8 @@ def main():
                 #     color_image = cv2.rotate(color_image, cv2.ROTATE_180)
                 #     depth_colormap = cv2.rotate(depth_colormap, cv2.ROTATE_180)
 
-                # 8. (可选) 在画面上添加设备信息
-                # 只显示序列号后4位以示区分
+                # 8. 在画面上添加设备信息
+                # 只显示序列号后4位
                 cv2.putText(color_image, f"Dev: {serial[-4:]}", (10, 30), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
                 
@@ -134,7 +131,7 @@ def main():
 
             # 9. 拼接所有设备的图像
             if not all_device_images:
-                continue # 如果所有设备都没有帧，则跳过
+                continue 
 
             # 垂直拼接所有设备的图像
             # Cam1: [Color | Depth]
@@ -142,7 +139,6 @@ def main():
             # Cam3: [Color | Depth]
             final_image = np.hstack(all_device_images)
 
-            # 10. 使用 OpenCV 显示
             cv2.imshow('Multi-RealSense View', final_image)
             
             # 按 'q' 或 ESC 退出
@@ -160,7 +156,6 @@ def main():
         return
 
     finally:
-        # 11. 停止所有 pipelines
         print("\n正在停止所有设备...")
         for serial in active_serials:
             if serial in pipelines:

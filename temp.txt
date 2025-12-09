@@ -15,6 +15,10 @@ python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/
 
 -------------------------------------------------------------------------------------------------------------------------
 
+0-68:  the top drawer
+69-117 :  the second drawer
+118-166 :  the third drawer
+
 uv run scripts/compute_norm_stats.py --config-name pi05_put_item_in_drawer_lora
 
 python piper_data_collect.py --task_name put_item_in_drawer --start_episode 0
@@ -24,7 +28,7 @@ python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_
 python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer/episode0
 
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual_replay.py   \
---checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_put_item_in_drawer_lora/put_item_in_drawer_30fps/24000  \
+--checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_item_in_drawer_lora/put_item_in_drawer_30fps/24000 \
 --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer/episode0 \
 --config_name pi05_put_item_in_drawer_lora
 
