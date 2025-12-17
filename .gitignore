@@ -5,3 +5,7 @@ openpi/third_party/
 openpi/.github/
 openpi/.vscode/
 openpi/.git_bak
+
+# cxp
+cxp.md
+modify_cxp.md

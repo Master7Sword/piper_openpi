@@ -115,6 +115,7 @@ class ModelTransformFactory(GroupFactory):
             case _model.ModelType.PI0:
                 return _transforms.Group(
                     inputs=[
+                        _transforms.ChoosePromptFromList(),
                         _transforms.InjectDefaultPrompt(self.default_prompt),
                         _transforms.ResizeImages(224, 224),
                         _transforms.TokenizePrompt(
@@ -127,6 +128,7 @@ class ModelTransformFactory(GroupFactory):
                 assert isinstance(model_config, pi0_config.Pi0Config)
                 return _transforms.Group(
                     inputs=[
+                        _transforms.ChoosePromptFromList(),
                         _transforms.InjectDefaultPrompt(self.default_prompt),
                         _transforms.ResizeImages(224, 224),
                         _transforms.TokenizePrompt(
@@ -147,6 +149,7 @@ class ModelTransformFactory(GroupFactory):
                 )
                 return _transforms.Group(
                     inputs=[
+                        _transforms.ChoosePromptFromList(),
                         _transforms.InjectDefaultPrompt(self.default_prompt),
                         _transforms.ResizeImages(224, 224),
                         _transforms.TokenizeFASTInputs(

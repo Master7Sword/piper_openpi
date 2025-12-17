@@ -325,6 +325,42 @@ class PromptFromLeRobotTask(DataTransformFn):
 
 
 @dataclasses.dataclass(frozen=True)
+class ChoosePromptFromList(DataTransformFn):
+    def __call__(self, data: DataDict) -> DataDict:
+        p = data.get("prompt", None)
+        if p is None:
+            return data
+        chosen = None
+        if isinstance(p, list):
+            if len(p) == 0:
+                return data
+            i = np.random.randint(len(p))
+            chosen = p[i]
+        elif isinstance(p, np.ndarray):
+            if p.ndim == 0:
+                chosen = p.item()
+            else:
+                if p.size == 0:
+                    return data
+                i = np.random.randint(p.shape[0])
+                chosen = p[i]
+        else:
+            chosen = p
+        if isinstance(chosen, bytes):
+            try:
+                chosen = chosen.decode("utf-8")
+            except Exception:
+                pass
+        if not isinstance(chosen, str) and hasattr(chosen, "item"):
+            try:
+                chosen = chosen.item()
+            except Exception:
+                pass
+        data["prompt"] = chosen
+        return data
+
+
+@dataclasses.dataclass(frozen=True)
 class PadStatesAndActions(DataTransformFn):
     """Zero-pads states and actions to the model action dimension."""
 

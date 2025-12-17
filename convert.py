@@ -116,6 +116,21 @@ def convert_dataset():
                     prompt = "put the yellow block into the top drawer"
                 elif episode_idx <= 285:
                     prompt = "put the yellow block into the second drawer"
+
+                # if episode_idx <= 68:
+                #     prompt = ["put the yellow block into the top drawer", "Place the yellow block in the uppermost drawer","Move the yellow item into the first drawer", "Take the yellow cube and deposit it in the top compartment."]
+                # elif episode_idx <= 117:
+                #     prompt = ["put the yellow block into the second drawer", "Place the yellow block in the second drawer (from the top)", "Move the yellow item into the second compartment down", "Take the yellow cube and place it into the second slot"]
+                # elif episode_idx <= 166:
+                #     prompt = ["put the yellow block into the third drawer", "Move the yellow item into the third storage slot (from the top)", "Take the yellow cube and deposit it into the third level compartment", "Insert the yellow square into the third drawer down"]
+                # elif episode_idx <= 196:
+                #     prompt = ["put the red block into the top drawer", "Place the red block in the uppermost drawer", "Move the red item into the first drawer", "Take the red cube and deposit it in the top compartment", ]
+                # elif episode_idx <= 225:
+                #     prompt = ["put the red block into the second drawer", "Place the red block in the second drawer (from the top)", "Move the red item into the second compartment down", "Take the red cube and place it into the second slot"]
+                # elif episode_idx <= 256:
+                #     prompt = ["put the yellow block into the top drawer", "Place the yellow block in the uppermost drawer","Move the yellow item into the first drawer", "Take the yellow cube and deposit it in the top compartment."]
+                # elif episode_idx <= 285:
+                #     prompt = ["put the yellow block into the second drawer", "Place the yellow block in the second drawer (from the top)", "Move the yellow item into the second compartment down", "Take the yellow cube and place it into the second slot"]
                
                 frame = {
                     "task": prompt, 
