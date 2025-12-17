@@ -1,0 +1,30 @@
+top: 23133
+second: 2
+third:
+
+0: success
+1: bad grasp
+2: bad open
+3: wrong drawer
+
+-------------------------------
+
+(both on desk) put yellow in top : sometimes fail grasp, success open
+(both on desk) put yellow in second : sometimes fail grasp, sometimes fail open
+(both on desk) put yellow in third : fail (open second)
+(both on desk) put red in top : success (when red on suitable place)
+(both on desk) put red in second : success (when red on suitable place)
+(both on desk) put red in third : fail grasp, sometimes open second
+put yellow in top : success (sometimes do not grasp. grasp red when put red on desk)
+put yellow in second : fail 
+put yellow in third : fail (often open second)
+put red in top : 
+fxxk you & mamba out : success grasp, fail open(between top and second)
+
+
+-------------------------------
+
+put yellow in top : between second and third
+put yellow in second : third
+put yellow in third : third
+hello world : between second and third

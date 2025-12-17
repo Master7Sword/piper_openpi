@@ -636,14 +636,16 @@ _CONFIGS = [
             action_horizon=50,      
             pi05=True,              
             paligemma_variant="gemma_2b_lora",      
-            action_expert_variant="gemma_300m_lora" 
+            action_expert_variant="gemma_300m_lora",
+            discrete_state_input=True,
         ), 
         data=LeRobotRealDataConfig(
-            repo_id="/home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_lerobot",
+            # repo_id="/home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_1_3_lerobot",
+            repo_id="/home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_ee_lerobot",
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader(
-            # "gs://openpi-assets/checkpoints/pi05_base/params"
-            "/home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_put_item_in_drawer_lora/put_item_in_drawer_30fps/11000/params"
+            "gs://openpi-assets/checkpoints/pi05_base/params"
+            # "/home/tengenx2204/workspace/mozihao/openpi/checkpoints/pi05_put_item_in_drawer_lora/put_item_in_drawer_30fps/11000/params"
         ),
         num_train_steps=30_000,
         batch_size=16, 

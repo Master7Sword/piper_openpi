@@ -65,7 +65,39 @@ def main(args, chunk_sizes=10):
                 top_img = cv2.resize(top_img, (224, 224))
                 right_img = cv2.resize(right_img, (224, 224))
 
-                current_observation_state = joints[t]
+                # current_observation_state = joints[t]
+
+                joint_right = piper_right.GetArmJointMsgs().joint_state
+                joint_left = piper_left.GetArmJointMsgs().joint_state
+                gripper_right = piper_right.GetArmGripperMsgs().gripper_state.grippers_angle
+                gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
+
+                joint_right_arr = np.array([
+                    joint_right.joint_1 / 1000.0,
+                    joint_right.joint_2 / 1000.0,
+                    joint_right.joint_3 / 1000.0,
+                    joint_right.joint_4 / 1000.0,
+                    joint_right.joint_5 / 1000.0,
+                    joint_right.joint_6 / 1000.0,
+                ])
+                joint_left_arr = np.array([
+                    joint_left.joint_1 / 1000.0,
+                    joint_left.joint_2 / 1000.0,
+                    joint_left.joint_3 / 1000.0,
+                    joint_left.joint_4 / 1000.0,
+                    joint_left.joint_5 / 1000.0,
+                    joint_left.joint_6 / 1000.0,
+                ])
+
+                gripper_right_arr = np.array([gripper_right / 1000.0])
+                gripper_left_arr = np.array([gripper_left / 1000.0])
+
+                current_observation_state = np.concatenate((
+                    joint_right_arr,
+                    gripper_right_arr,
+                    joint_left_arr,
+                    gripper_left_arr
+                ))
 
                 print(f"Replay frame {t} observation state:", current_observation_state)
 
@@ -74,7 +106,7 @@ def main(args, chunk_sizes=10):
                     'observation/top_image': top_img,
                     'observation/right_image': right_img,
                     'observation/state': current_observation_state,
-                    'prompt': "open drawer, put the yellow block in drawer and close drawer",
+                    'prompt': "put the yellow block into the second drawer",
                     # 'prompt' : "open drawer then close drawer"
                 }
 

@@ -15,6 +15,69 @@ def find_nearest_idx(array, value):
         return idx - 1
     else:
         return idx
+    
+
+def post_process_append_hold(data_dict, frames_dir, num_cams, n_repeat=20):
+    """
+    后处理：将最后一帧的状态和动作复制 n_repeat 份，模拟停留。
+    
+    Args:
+        data_dict (dict): 包含 'timestamps', 'joints', 'end_pose' 等数据的字典。
+        frames_dir (str): 保存图片的根目录 (e.g., .../frames)。
+        num_cams (int): 相机数量，用于遍历 cam0, cam1...
+        n_repeat (int): 需要追加的帧数。
+    """
+    if(n_repeat <= 0):
+        return
+    timestamps = data_dict["timestamps"]
+    
+    # 边界检查：如果数据太少，无法计算 delta_t，直接跳过
+    if len(timestamps) < 2:
+        print("警告: 帧数不足，跳过末尾填充处理。")
+        return
+
+    # 1. 计算时间增量 dt
+    # 取最后两帧的时间差作为递增步长
+    dt = timestamps[-1] - timestamps[-2]
+    
+    # 获取需要复制的最后一帧的数据
+    last_ts = timestamps[-1]
+    last_joints = data_dict["joints"][-1]
+    last_ee = data_dict["end_pose"][-1]
+    last_j_action = data_dict["joints_actions"][-1]
+    last_ee_action = data_dict["end_pose_actions"][-1]
+
+    # 获取当前已有的帧数（用于计算图片文件名）
+    current_count = len(timestamps)
+    last_img_idx = current_count - 1  # 最后一帧的文件名索引 (e.g., 00199)
+
+    print(f"  - 执行后处理: 追加 {n_repeat} 帧静止数据 (dt={dt:.4f})")
+
+    for i in range(1, n_repeat + 1):
+        # --- A. 更新数据字典 ---
+        new_ts = last_ts + (dt * i)
+        
+        data_dict["timestamps"].append(new_ts)
+        data_dict["joints"].append(last_joints)
+        data_dict["end_pose"].append(last_ee)
+        # 动作通常也保持不变（继续保持当前姿态），或者设为零速，这里复用最后一帧动作
+        data_dict["joints_actions"].append(last_j_action)
+        data_dict["end_pose_actions"].append(last_ee_action)
+
+        # --- B. 复制图像文件 ---
+        # 新的索引
+        new_img_idx = last_img_idx + i
+        
+        for cam_id in range(num_cams):
+            # 源文件路径 (最后一帧)
+            src_path = os.path.join(frames_dir, f"cam{cam_id}", f"{last_img_idx:05d}.jpg")
+            # 目标文件路径 (追加帧)
+            dst_path = os.path.join(frames_dir, f"cam{cam_id}", f"{new_img_idx:05d}.jpg")
+            
+            if os.path.exists(src_path):
+                # 使用 copy 此时比 cv2 读取再写入快得多且不损失画质
+                shutil.copy(src_path, dst_path)
+
 
 def process_episode(episode_path):
     robot_h5_path = os.path.join(episode_path, "robot_data.h5")
@@ -130,6 +193,21 @@ def process_episode(episode_path):
         if i % 50 == 0:
             print(f"    已处理 {i}/{num_valid_frames} 帧", end='\r')
 
+    # ==========================================
+    # --- 后处理: 追加停留帧 (NEW) ---
+    # ==========================================
+    HOLD_FRAMES = 50
+    
+    post_process_append_hold(
+        data_dict=data_dict,
+        frames_dir=frames_dir,
+        num_cams=len(serials),
+        n_repeat=HOLD_FRAMES
+    )
+    
+    # 更新有效总帧数 (这是关键，否则H5的属性会和实际数据长度不符)
+    final_num_frames = len(data_dict["timestamps"])
+
     # 5. 保存 H5
     output_h5_path = os.path.join(episode_path, "robot_data_aligned.h5")
     with h5py.File(output_h5_path, 'w') as f_out:
@@ -139,7 +217,7 @@ def process_episode(episode_path):
         f_out.create_dataset('joints_actions', data=np.array(data_dict["joints_actions"]))
         f_out.create_dataset('end_pose_actions', data=np.array(data_dict["end_pose_actions"]))
         
-        f_out.attrs['num_frames'] = num_valid_frames
+        f_out.attrs['num_frames'] = final_num_frames
         f_out.attrs['fps'] = 30
         f_out.attrs['image_size'] = "224x224" 
         f_out.attrs['description'] = "Downsampled to 30fps. Resized to 224x224. Actions are states at t+1."

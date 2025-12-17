@@ -34,17 +34,19 @@ def main(args):
         # Initialize arms to startup pose
         piper_right.MotionCtrl_2(0x01, 0x01, 50, 0x00)
         piper_left.MotionCtrl_2(0x01, 0x01, 50, 0x00)
-        piper_right.JointCtrl(41920, 49997, -74840, -3245, 47584, -2760)
-        piper_left.JointCtrl(-24171, 14878, -4253, -27609, -8485, 17650)
+        # piper_right.JointCtrl(41920, 49997, -74840, -3245, 47584, -2760)
+        # piper_left.JointCtrl(-24171, 14878, -4253, -27609, -8485, 17650)
+        piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
+        piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
         piper_right.GripperCtrl(abs(100), 500, 0x01, 0)
         piper_left.GripperCtrl(abs(100), 500, 0x01, 0)
         print("Piper双臂初始化完成。")
 
         t = 0
-        while t < num_frames:
-            action_chunk = np.array(joints[t])
-            # print(action_chunk.shape)
-            t = piper_step_chunk_dual(piper_right, piper_left, action_chunk, t)
+
+        action_chunk = np.array(joints)
+        # print(action_chunk.shape)
+        t = piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, n_steps=action_chunk.shape[0])
 
         f_robot.close()
         return

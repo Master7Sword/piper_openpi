@@ -75,6 +75,8 @@ def convert_dataset():
         with h5py.File(h5_path, 'r') as hf:
             actions = hf['joints_actions'][:, ]
             states = hf['joints'][:, ]  
+            # actions = hf['end_pose_actions'][:, ] 
+            # states = hf['end_pose'][:, ]  
             num_frames = actions.shape[0]
 
             left_images = sorted(list((frames_dir / "cam0").glob("*.jpg")))
@@ -106,9 +108,17 @@ def convert_dataset():
                     prompt = "put the yellow block into the second drawer"
                 elif episode_idx <= 166:
                     prompt = "put the yellow block into the third drawer"
-
+                elif episode_idx <= 196:
+                    prompt = "put the red block into the top drawer"
+                elif episode_idx <= 225:
+                    prompt = "put the red block into the second drawer"
+                elif episode_idx <= 256:
+                    prompt = "put the yellow block into the top drawer"
+                elif episode_idx <= 285:
+                    prompt = "put the yellow block into the second drawer"
+               
                 frame = {
-                    "task": prompt,  ## 这里记得改！！
+                    "task": prompt, 
                     "observation.state": padded_state,
                     "actions": padded_action,   
                     "observation.images.left": cv2.cvtColor(cv2.imread(str(left_images[i])), cv2.COLOR_BGR2RGB),        

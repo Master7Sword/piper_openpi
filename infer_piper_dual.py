@@ -4,9 +4,10 @@ import argparse
 from utils import *
 import pyrealsense2 as rs
 
+np.set_printoptions(precision=2)
 
-def main(args, chunk_sizes=10):
-    max_steps = 1000
+
+def main(args, chunk_sizes, max_steps=5000):
 
     # 初始化相机
     context = rs.context()
@@ -72,8 +73,8 @@ def main(args, chunk_sizes=10):
     print("Piper双臂已连接并启动。")
 
     # 双臂初始位置（关节和夹爪）
-    piper_right.MotionCtrl_2(0x01, 0x01, 60, 0x00)
-    piper_left.MotionCtrl_2(0x01, 0x01, 60, 0x00)
+    piper_right.MotionCtrl_2(0x01, 0x01, 40, 0x00)
+    piper_left.MotionCtrl_2(0x01, 0x01, 40, 0x00)
     # piper_right.JointCtrl(41913, 50004, -74840, -3245, 47584, -2760)
     # piper_left.JointCtrl(-36499, 299, -3872, -54116, 5961, 54201) # open drawer 
     # piper_right.JointCtrl(41920, 49997, -74840, -3245, 47584, -2760)
@@ -81,118 +82,112 @@ def main(args, chunk_sizes=10):
     piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
     piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
     piper_right.GripperCtrl(abs(0), 100, 0x01, 0)
-    piper_left.GripperCtrl(abs(0), 100, 0x01, 0)
+    piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
     print("Piper双臂初始化完成。")
 
     # 加载模型
     policy = load_policy(args.checkpoint_dir, args.config_name)
 
-    origin_observation_state = 0
-
     t = 0
-    action_plan = []
-    history_actions = []
     while t < max_steps:
-        if not action_plan:
-            all_device_images = []
-            for serial in active_serials:
-                pipeline = pipelines[serial]
-                align = aligns[serial]
+        all_device_images = []
+        for serial in active_serials:
+            pipeline = pipelines[serial]
+            align = aligns[serial]
 
-                success, frames = pipeline.try_wait_for_frames()
-                if not success:
-                    continue
+            success, frames = pipeline.try_wait_for_frames()
+            if not success:
+                continue
 
-                aligned_frames = align.process(frames)
-                color_frame = aligned_frames.get_color_frame()
-                if not color_frame:
-                    continue
+            aligned_frames = align.process(frames)
+            color_frame = aligned_frames.get_color_frame()
+            if not color_frame:
+                continue
 
-                color_frame = np.asanyarray(color_frame.get_data())
-                aligned_img = preprocess_image_for_alignment(color_frame, quality=90)
-                final_img = cv2.resize(aligned_img, (224, 224), interpolation=cv2.INTER_AREA)
-                all_device_images.append(final_img)
-                # all_device_images.append(color_frame)
+            color_frame = np.asanyarray(color_frame.get_data())
+            aligned_img = preprocess_image_for_alignment(color_frame, quality=90)
+            final_img = cv2.resize(aligned_img, (224, 224), interpolation=cv2.INTER_AREA)
+            all_device_images.append(final_img)
+            # all_device_images.append(color_frame)
 
-            for idx, img in enumerate(all_device_images):
-                window_name = f"Camera {idx}"
-                cv2.imshow(window_name, img)
-            cv2.waitKey(2)
+        for idx, img in enumerate(all_device_images):
+            window_name = f"Camera {idx}"
+            cv2.imshow(window_name, img)
+        # cv2.waitKey(1)
 
-            joint_right = piper_right.GetArmJointMsgs().joint_state
-            joint_left = piper_left.GetArmJointMsgs().joint_state
-            gripper_right = piper_right.GetArmGripperMsgs().gripper_state.grippers_angle
-            gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
+        if args.mode == 'joint':    
 
-            joint_right_arr = np.array([
-                joint_right.joint_1 / 1000.0,
-                joint_right.joint_2 / 1000.0,
-                joint_right.joint_3 / 1000.0,
-                joint_right.joint_4 / 1000.0,
-                joint_right.joint_5 / 1000.0,
-                joint_right.joint_6 / 1000.0,
+            actions_right = piper_right.GetArmJointMsgs().joint_state
+            actions_left = piper_left.GetArmJointMsgs().joint_state
+
+            actions_right_arr = np.array([
+                actions_right.joint_1 / 1000.0,
+                actions_right.joint_2 / 1000.0,
+                actions_right.joint_3 / 1000.0,
+                actions_right.joint_4 / 1000.0,
+                actions_right.joint_5 / 1000.0,
+                actions_right.joint_6 / 1000.0,
             ])
-            joint_left_arr = np.array([
-                joint_left.joint_1 / 1000.0,
-                joint_left.joint_2 / 1000.0,
-                joint_left.joint_3 / 1000.0,
-                joint_left.joint_4 / 1000.0,
-                joint_left.joint_5 / 1000.0,
-                joint_left.joint_6 / 1000.0,
+            actions_left_arr = np.array([
+                actions_left.joint_1 / 1000.0,
+                actions_left.joint_2 / 1000.0,
+                actions_left.joint_3 / 1000.0,
+                actions_left.joint_4 / 1000.0,
+                actions_left.joint_5 / 1000.0,
+                actions_left.joint_6 / 1000.0,
+            ])
+        elif args.mode == 'ee':
+
+            actions_right = piper_right.GetArmEndPoseMsgs().end_pose
+            actions_left = piper_left.GetArmEndPoseMsgs().end_pose
+
+            actions_right_arr = np.array([
+                actions_right.X_axis / 1000.0,
+                actions_right.Y_axis / 1000.0,
+                actions_right.Z_axis / 1000.0,
+                actions_right.RX_axis / 1000.0,
+                actions_right.RY_axis / 1000.0,
+                actions_right.RZ_axis / 1000.0,
+            ])
+            actions_left_arr = np.array([
+                actions_left.X_axis / 1000.0,
+                actions_left.Y_axis / 1000.0,
+                actions_left.Z_axis / 1000.0,
+                actions_left.RX_axis / 1000.0,
+                actions_left.RY_axis / 1000.0,
+                actions_left.RZ_axis / 1000.0,
             ])
 
-            gripper_right_arr = np.array([gripper_right / 1000.0])
-            gripper_left_arr = np.array([gripper_left / 1000.0])
+        gripper_right = piper_right.GetArmGripperMsgs().gripper_state.grippers_angle
+        gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
+        gripper_right_arr = np.array([gripper_right / 1000.0])
+        gripper_left_arr = np.array([gripper_left / 1000.0])
 
-            current_observation_state = np.concatenate((
-                joint_right_arr,
-                gripper_right_arr,
-                joint_left_arr,
-                gripper_left_arr
-            ))
+        current_observation_state = np.concatenate((
+            actions_right_arr,
+            gripper_right_arr,
+            actions_left_arr,
+            gripper_left_arr
+        ))
 
-            print("当前观测状态（双臂拼接）:", current_observation_state)
+        print("当前观测状态（双臂拼接）:", current_observation_state)
 
-            # if t == 0:
-            #     origin_observation_state = current_observation_state
 
-            # if t == 0:
-            #     pad = np.zeros((len_prev_actions, 32), dtype=np.float32)
-            #     obs_state_padded = np.zeros(32, dtype=np.float32)
-            #     obs_state_padded[:origin_observation_state.shape[0]] = origin_observation_state
-            #     pad[:] = obs_state_padded
-            #     history_action = pad
-            # elif t < len_prev_actions:
-            #     pad_len = len_prev_actions - t
-            #     pad = np.zeros((pad_len, 32), dtype=np.float32)
-            #     obs_state_padded = np.zeros(32, dtype=np.float32)
-            #     obs_state_padded[:origin_observation_state.shape[0]] = origin_observation_state
-            #     pad[:] = obs_state_padded
-            #     print(f"pad shape {pad.shape}")
-            #     history_action = np.concatenate((pad, np.array(history_actions).reshape(-1, 32)),
-            #                                    axis=0)
-            # else:
-            #     history_action = np.array(history_actions[-len_prev_actions:]).reshape(-1, 32)
+        obs = {
+            'observation/left_image': all_device_images[0],
+            'observation/top_image': all_device_images[1],
+            'observation/right_image': all_device_images[2],
+            'observation/state': current_observation_state,
+            # 'prompt': "open drawer then close drawer",
+            'prompt': "put the yellow block into the second drawer",
+            # 'prompt': "hello world",
+            # 'prompt': "mamba out"
+        }
 
-            obs = {
-                'observation/left_image': all_device_images[0],
-                'observation/top_image': all_device_images[1],
-                'observation/right_image': all_device_images[2],
-                'observation/state': current_observation_state,
-                # 'prompt': "open drawer then close drawer",
-                'prompt': "open drawer, put the yellow block in drawer and close drawer",
-            }
+        action_chunk = infer_actions(obs, policy)
+        # print(f"推理动作块形状: {action_chunk.shape}, 类型: {type(action_chunk)}")
 
-            action_chunk = infer_actions(obs, policy)
-            # print(f"推理动作块形状: {action_chunk.shape}, 类型: {type(action_chunk)}")
-
-            # for act in action_chunk[:chunk_sizes]:
-            #     act_padded = np.zeros(32, dtype=np.float32)
-            #     act_padded[:len(act)] = act
-            #     history_actions.append(act_padded)
-
-        # 现使用双臂执行步进函数
-        t = piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, n_steps=chunk_sizes)
+        t = piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode=args.mode, n_steps=chunk_sizes)
 
     print(f"推理执行完成。")
 
@@ -201,10 +196,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run infer_piper.py with custom directories.")
     parser.add_argument('--checkpoint_dir', type=str, required=True, help='Path to the checkpoint directory')
     parser.add_argument('--config_name', type=str, required=True, help='Config name')
-    parser.add_argument('--prev_actions', type=int, default=50, help='Number of previous actions to consider (default: 50)')
+    parser.add_argument('--mode', type=str, required=True, choices=['joint', 'ee'], help='Control mode: joint or ee (default: joint)')
     args = parser.parse_args()
 
-    chunk_sizes = 50
+    chunk_sizes = 20
+    max_steps = 5000
 
-
-    main(args, chunk_sizes)
+    main(args, chunk_sizes, max_steps)

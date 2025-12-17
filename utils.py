@@ -19,7 +19,8 @@ def infer_actions(obs, policy):
         action = policy.infer(obs)['actions']
     return action
 
-def piper_step_dual(piper_right, piper_left, action):
+
+def piper_step_dual(piper_right, piper_left, action, mode='joint'):
     """
     处理14维action，控制双臂：
     action[0:6]: can_arm1关节
@@ -29,19 +30,26 @@ def piper_step_dual(piper_right, piper_left, action):
     """
     start_time = time.time()
     try:
-        joints_right = [round(x * 1000) for x in action[0:6]]
+        actions_right = [round(x * 1000) for x in action[0:6]]
         gripper_right = round(action[6] * 1000)
-        joints_left = [round(x * 1000) for x in action[7:13]]
+        actions_left = [round(x * 1000) for x in action[7:13]]
         gripper_left = round(action[13] * 1000)
 
         gripper_right = 0 if abs(gripper_right) < 40000 else gripper_right
         gripper_left = 0 if abs(gripper_left) < 30000 else gripper_left
 
-        piper_right.MotionCtrl_2(0x01, 0x01, 50, 0x00)
-        piper_left.MotionCtrl_2(0x01, 0x01, 50, 0x00)
+        if mode == 'joint':
+            piper_right.MotionCtrl_2(0x01, 0x01, 50, 0x00)
+            piper_left.MotionCtrl_2(0x01, 0x01, 50, 0x00)
 
-        piper_right.JointCtrl(*joints_right)
-        piper_left.JointCtrl(*joints_left)
+            piper_right.JointCtrl(*actions_right)
+            piper_left.JointCtrl(*actions_left)
+        elif mode == 'ee':
+            piper_right.MotionCtrl_2(0x01, 0x00, 20, 0x00)
+            piper_left.MotionCtrl_2(0x01, 0x00, 20, 0x00)
+
+            piper_right.EndPoseCtrl(*actions_right)
+            piper_left.EndPoseCtrl(*actions_left)
 
         piper_right.GripperCtrl(abs(gripper_right), 500, 0x01, 0)
         piper_left.GripperCtrl(abs(gripper_left), 500, 0x01, 0)
@@ -53,7 +61,7 @@ def piper_step_dual(piper_right, piper_left, action):
            piper_left.GetArmStatus().arm_status.motion_status == 0x01):
         time.sleep(0.0001)
         counter += 1
-        if counter > 300:
+        if counter > 50000:
             print("Warning: Piper dual-arm motion taking too long.")
             break
 
@@ -66,7 +74,7 @@ def piper_step_dual(piper_right, piper_left, action):
         time.sleep(frame_duration - elapsed)
 
 
-def piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, n_steps=50):
+def piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode='joint', n_steps=50):
     print(action_chunk.shape , n_steps)
     assert action_chunk.shape[0] >= n_steps
     t = t + n_steps
@@ -79,7 +87,7 @@ def piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, n_steps=50):
         # print(f"action {i} right hand: {action[:7]}")
         # print(f"action {i} left hand: {action[7:14]}")
         # time.sleep(1)
-        piper_step_dual(piper_right, piper_left, action)
+        piper_step_dual(piper_right, piper_left, action, mode=mode)
 
     return t
 
