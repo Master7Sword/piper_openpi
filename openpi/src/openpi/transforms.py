@@ -331,7 +331,7 @@ class ChoosePromptFromList(DataTransformFn):
         if p is None:
             return data
         chosen = None
-        if isinstance(p, list):
+        if isinstance(p, tuple) or isinstance(p, list):
             if len(p) == 0:
                 return data
             i = np.random.randint(len(p))
@@ -357,6 +357,7 @@ class ChoosePromptFromList(DataTransformFn):
             except Exception:
                 pass
         data["prompt"] = chosen
+        print(f"Choose prompt: {chosen}")
         return data
 
 

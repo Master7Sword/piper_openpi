@@ -158,11 +158,12 @@ class RobotDataProcess(mp.Process):
         
 
 class CameraDataProcess(mp.Process):
-    def __init__(self, start_event: Event, stop_event: Event, episode_path: str):
+    def __init__(self, start_event: Event, stop_event: Event, episode_path: str, fps: int):
         super().__init__()
         self.start_event = start_event
         self.stop_event = stop_event
         self.episode_path = episode_path
+        self.fps = fps
 
     def run(self):
         # --- 1. 初始化相机资源 ---
@@ -177,7 +178,7 @@ class CameraDataProcess(mp.Process):
         pipelines = {}
         configs = {}
         aligns = {}
-        width, height, fps = 640, 480, 30
+        width, height, fps = 640, 480, self.fps
 
         # 配置 Pipeline
         for serial in serials:
@@ -302,6 +303,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--start_episode', type=int, default=0)
     parser.add_argument('--task_name', type=str, required=True, help='Task name')
+    parser.add_argument('--fps', type=int, default=30)
     args = parser.parse_args()
 
     # base_path = os.path.abspath(os.path.dirname(__file__))
@@ -340,7 +342,7 @@ def main():
 
         # 3. 启动进程 (此时相机开始预热，但未录制)
         robot_proc = RobotDataProcess(start_event, stop_event, episode_path)
-        cam_proc = CameraDataProcess(start_event, stop_event, episode_path)
+        cam_proc = CameraDataProcess(start_event, stop_event, episode_path, args.fps)
         
         robot_proc.start()
         cam_proc.start()

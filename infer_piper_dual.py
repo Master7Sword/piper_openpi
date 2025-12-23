@@ -113,7 +113,7 @@ def main(args, chunk_sizes, max_steps=5000):
         for idx, img in enumerate(all_device_images):
             window_name = f"Camera {idx}"
             cv2.imshow(window_name, img)
-        # cv2.waitKey(1)
+        cv2.waitKey(1)
 
         if args.mode == 'joint':    
 
@@ -179,7 +179,7 @@ def main(args, chunk_sizes, max_steps=5000):
             'observation/right_image': all_device_images[2],
             'observation/state': current_observation_state,
             # 'prompt': "open drawer then close drawer",
-            'prompt': "put the yellow block into the second drawer",
+            'prompt': "put the block into the third drawer",
             # 'prompt': "hello world",
             # 'prompt': "mamba out"
         }

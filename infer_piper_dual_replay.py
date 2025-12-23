@@ -65,39 +65,39 @@ def main(args, chunk_sizes=10):
                 top_img = cv2.resize(top_img, (224, 224))
                 right_img = cv2.resize(right_img, (224, 224))
 
-                # current_observation_state = joints[t]
+                current_observation_state = joints[t]
 
-                joint_right = piper_right.GetArmJointMsgs().joint_state
-                joint_left = piper_left.GetArmJointMsgs().joint_state
-                gripper_right = piper_right.GetArmGripperMsgs().gripper_state.grippers_angle
-                gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
+                # joint_right = piper_right.GetArmJointMsgs().joint_state
+                # joint_left = piper_left.GetArmJointMsgs().joint_state
+                # gripper_right = piper_right.GetArmGripperMsgs().gripper_state.grippers_angle
+                # gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
 
-                joint_right_arr = np.array([
-                    joint_right.joint_1 / 1000.0,
-                    joint_right.joint_2 / 1000.0,
-                    joint_right.joint_3 / 1000.0,
-                    joint_right.joint_4 / 1000.0,
-                    joint_right.joint_5 / 1000.0,
-                    joint_right.joint_6 / 1000.0,
-                ])
-                joint_left_arr = np.array([
-                    joint_left.joint_1 / 1000.0,
-                    joint_left.joint_2 / 1000.0,
-                    joint_left.joint_3 / 1000.0,
-                    joint_left.joint_4 / 1000.0,
-                    joint_left.joint_5 / 1000.0,
-                    joint_left.joint_6 / 1000.0,
-                ])
+                # joint_right_arr = np.array([
+                #     joint_right.joint_1 / 1000.0,
+                #     joint_right.joint_2 / 1000.0,
+                #     joint_right.joint_3 / 1000.0,
+                #     joint_right.joint_4 / 1000.0,
+                #     joint_right.joint_5 / 1000.0,
+                #     joint_right.joint_6 / 1000.0,
+                # ])
+                # joint_left_arr = np.array([
+                #     joint_left.joint_1 / 1000.0,
+                #     joint_left.joint_2 / 1000.0,
+                #     joint_left.joint_3 / 1000.0,
+                #     joint_left.joint_4 / 1000.0,
+                #     joint_left.joint_5 / 1000.0,
+                #     joint_left.joint_6 / 1000.0,
+                # ])
 
-                gripper_right_arr = np.array([gripper_right / 1000.0])
-                gripper_left_arr = np.array([gripper_left / 1000.0])
+                # gripper_right_arr = np.array([gripper_right / 1000.0])
+                # gripper_left_arr = np.array([gripper_left / 1000.0])
 
-                current_observation_state = np.concatenate((
-                    joint_right_arr,
-                    gripper_right_arr,
-                    joint_left_arr,
-                    gripper_left_arr
-                ))
+                # current_observation_state = np.concatenate((
+                #     joint_right_arr,
+                #     gripper_right_arr,
+                #     joint_left_arr,
+                #     gripper_left_arr
+                # ))
 
                 print(f"Replay frame {t} observation state:", current_observation_state)
 
@@ -113,7 +113,7 @@ def main(args, chunk_sizes=10):
                 action_chunk = infer_actions(obs, policy)
                 # print(f"Predicted action chunk shape: {action_chunk.shape}")
 
-                t = piper_step_chunk_dual(piper_right, piper_left, action_chunk[:chunk_sizes], t, n_steps=chunk_sizes)
+                t = piper_step_chunk_dual(piper_right, piper_left, action_chunk[:chunk_sizes], t, mode=args.mode, n_steps=chunk_sizes)
 
             print(f"Replay rollout {i + 1} completed.")
 
@@ -128,6 +128,7 @@ if __name__ == "__main__":
     parser.add_argument('--rollouts_num', type=int, default=1, help='Number of rollouts (default: 1)')
     parser.add_argument('--prev_actions', type=int, default=50, help='Number of previous actions to consider (default: 50)')
     parser.add_argument('--replay_episode_dir', type=str, default=None, help='Path to replay episode directory for offline replay')
+    parser.add_argument('--mode', type=str, required=True, choices=['joint', 'ee'], help='Control mode: joint or ee (default: joint)')
     args = parser.parse_args()
 
     chunk_sizes = 50

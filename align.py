@@ -196,7 +196,7 @@ def process_episode(episode_path):
     # ==========================================
     # --- 后处理: 追加停留帧 (NEW) ---
     # ==========================================
-    HOLD_FRAMES = 50
+    HOLD_FRAMES = 20  # 追加的停留帧数
     
     post_process_append_hold(
         data_dict=data_dict,

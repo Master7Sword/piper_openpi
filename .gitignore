@@ -6,6 +6,8 @@ openpi/.github/
 openpi/.vscode/
 openpi/.git_bak
 
+__pycache__/
+
 # cxp
 cxp.md
 modify_cxp.md

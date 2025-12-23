@@ -61,7 +61,7 @@ def piper_step_dual(piper_right, piper_left, action, mode='joint'):
            piper_left.GetArmStatus().arm_status.motion_status == 0x01):
         time.sleep(0.0001)
         counter += 1
-        if counter > 50000:
+        if counter > 250:
             print("Warning: Piper dual-arm motion taking too long.")
             break
 

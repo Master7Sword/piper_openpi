@@ -20,11 +20,28 @@ put yellow in second : fail
 put yellow in third : fail (often open second)
 put red in top : 
 fxxk you & mamba out : success grasp, fail open(between top and second)
-
-
 -------------------------------
 
 put yellow in top : between second and third
 put yellow in second : third
 put yellow in third : third
 hello world : between second and third
+
+----------------------------------------------- ie 
+
+(both on desk) put the yellow block into the top drawer : open second x1 / open top x2
+(both on desk) Place the yellow block in the uppermost drawer : open first failed, then open second / shuangkaimen
+(both on desk) Move the yellow item into the first drawer : success(open failed first, but recovered)
+(both on desk) Take the yellow cube and deposit it in the top compartment. : open first failed, then open second
+(both on desk) put the yellow block into the second drawer : open first ...
+(both on desk) Place the yellow block in the second drawer (from the top): open first
+(both on desk) Move the yellow item into the second compartment down : open first
+(both on desk) Take the yellow cube and place it into the second slot : open first
+(both on desk) put the yellow block into the third drawer : open first
+(both on desk) Move the yellow item into the third storage slot (from the top) : open first
+(both on desk) Take the yellow cube and deposit it into the third level compartment : open first
+(both on desk) put the red block into the top drawer : open first failed / success 
+(both on desk) Move the red item into the first drawer : success
+(both on desk) put the red block into the second drawer : open first
+(both on desk) Place the red block in the second drawer (from the top) : open first
+(both on desk) put the red block into the third drawer : open first
