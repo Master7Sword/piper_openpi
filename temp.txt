@@ -10,19 +10,23 @@ realsense-viewer
 30 - 59: blue
 60 - 89: red
 
-python piper_data_collect.py --task_name pick_block --start_episode 0
+python piper_data_collect.py --task_name put_item_in_drawer_instr --start_episode 399
 
-python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/pick_block --start_episode 0
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr --start_episode 399
 
 -------------------------------------------------------------------------------------------------------------------------
 
 
-python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer_only --start_episode 0
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr --start_episode 0
 
 python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer_only/episode0
 
-python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full/29999 \
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_822/29999 \
                             --config_name pi05_put_item_in_drawer \
+                            --mode joint
+
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_pick_block/29999 \
+                            --config_name pi05_pick_block \
                             --mode joint
 
 -------------------------------------------------------------------------------------------------------------------------
@@ -32,10 +36,49 @@ python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/
 118-166 :  put the yellow block into the third drawer
 167-196 :  put the red block into the top drawer      (yellow and red)
 197 - 225:  put the red block into the second drawer      (yellow and red)
-226 - 256:  put the yellow block into the top drawer       (yellow and red)
+226 - 255:  put the yellow block into the top drawer       (yellow and red)
 256 - 285:  put the yellow block into the second drawer      (yellow and red)
 
 plan: last 4 tasks collect 70 more episodes (2025.12.19)
+0 - 69: yellow top
+70-139: yellow second
+140-209: red top
+210-279: red second
+
+instr:
+0 - 99: yellow top
+100-199: yellow second
+200-299: red top
+300-399: red second
+400-419: blue third
+420-424: blue top
+425-429: blue second
+430-449: green third
+450-454: green top
+455-459: green second
+460-469: blue car top
+470-479: blue car second
+480-489: blue car third
+490-499: red car top
+500-509: red car second
+510-519: red car third
+520-529: carrot top
+530-539: carrot second
+540-549: carrot third
+550-559: banana top
+560-569: banana second
+570-579: banana third
+580-589: eggplant top
+590-599: eggplant second
+600-609: eggplant third
+610-619: pig top
+620-629: pig second
+630-639: pig third
+640-649: cow top
+650-654: cow second
+655-723:  put the yellow block into the top drawer
+724-772 :  put the yellow block into the second drawer
+773-821 :  put the yellow block into the third drawer
 
 uv run scripts/compute_norm_stats.py --config-name pi05_put_item_in_drawer_lora
 
@@ -59,14 +102,9 @@ XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual_replay.py   \
 
 
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual.py \
-    --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/put_item_in_drawer_lora_ie/29999 \
+    --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_item_in_drawer_lora/two_item_3_drawer/29999 \
     --config_name pi05_put_item_in_drawer_lora \
     --mode joint
-
-XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual.py \
-    --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_item_in_drawer_lora/two_item_3_drawer/ee/29999 \
-    --config_name pi05_put_item_in_drawer_lora \
-    --mode ee
 
 ------------------------------------------------------------------------------------------------------------------------
 

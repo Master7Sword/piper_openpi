@@ -9,7 +9,6 @@ np.set_printoptions(precision=2)
 
 def main(args, chunk_sizes, max_steps=5000):
 
-    # 初始化相机
     context = rs.context()
     devices = context.query_devices()
     serial_numbers = [dev.get_info(rs.camera_info.serial_number) for dev in devices]
@@ -60,7 +59,6 @@ def main(args, chunk_sizes, max_steps=5000):
         return
 
     print(f"\n成功启动 {len(active_serials)} 台相机")
-    # 对 active_serials 进行排序
     active_serials.sort()
 
     # 初始化双臂piper接口
@@ -81,6 +79,8 @@ def main(args, chunk_sizes, max_steps=5000):
     # piper_left.JointCtrl(-24171, 14878, -4253, -27609, -8485, 17650) # open & close drawer
     piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
     piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
+    # piper_right.JointCtrl(29886, 49993, -42882, -3246, 54486, 9274)
+    # piper_left.JointCtrl(-20531,     0, -169, 1265, 23982, 10709) #  pick_block
     piper_right.GripperCtrl(abs(0), 100, 0x01, 0)
     piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
     print("Piper双臂初始化完成。")
@@ -106,13 +106,15 @@ def main(args, chunk_sizes, max_steps=5000):
 
             color_frame = np.asanyarray(color_frame.get_data())
             aligned_img = preprocess_image_for_alignment(color_frame, quality=90)
-            final_img = cv2.resize(aligned_img, (224, 224), interpolation=cv2.INTER_AREA)
-            all_device_images.append(final_img)
+            final_img_bgr = cv2.resize(aligned_img, (224, 224), interpolation=cv2.INTER_AREA)
+            final_img_rgb = cv2.cvtColor(final_img_bgr, cv2.COLOR_BGR2RGB)
+            all_device_images.append(final_img_rgb)
             # all_device_images.append(color_frame)
 
         for idx, img in enumerate(all_device_images):
             window_name = f"Camera {idx}"
-            cv2.imshow(window_name, img)
+            # cv2.imshow(window_name, img)
+            cv2.imshow(window_name, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
         cv2.waitKey(1)
 
         if args.mode == 'joint':    
@@ -178,10 +180,10 @@ def main(args, chunk_sizes, max_steps=5000):
             'observation/top_image': all_device_images[1],
             'observation/right_image': all_device_images[2],
             'observation/state': current_observation_state,
-            # 'prompt': "open drawer then close drawer",
-            'prompt': "put the block into the third drawer",
-            # 'prompt': "hello world",
-            # 'prompt': "mamba out"
+            # 'prompt': "open drawer then close the top drawer",
+            'prompt': "put the red car into the third drawer",
+            # 'prompt': "pick up the yellow block",
+            # 'prompt': "hello world"
         }
 
         action_chunk = infer_actions(obs, policy)
@@ -200,6 +202,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     chunk_sizes = 20
-    max_steps = 5000
+    max_steps = 10000
 
     main(args, chunk_sizes, max_steps)

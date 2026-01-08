@@ -7,53 +7,12 @@ import cv2
 import re
 import numpy as np 
 
-def build_prompt(episode_idx: int) -> str:
-    mapping = [
-        (0, 99, "yellow block", "top"),
-        (100, 199, "yellow block", "second"),
-        (200, 299, "red block", "top"),
-        (300, 399, "red block", "second"),
-        (400, 419, "blue block", "third"),
-        (420, 424, "blue block", "top"),
-        (425, 429, "blue block", "second"),
-        (430, 449, "green block", "third"),
-        (450, 454, "green block", "top"),
-        (455, 459, "green block", "second"),
-        (460, 469, "blue car", "top"),
-        (470, 479, "blue car", "second"),
-        (480, 489, "blue car", "third"),
-        (490, 499, "red car", "top"),
-        (500, 509, "red car", "second"),
-        (510, 519, "red car", "third"),
-        (520, 529, "carrot", "top"),
-        (530, 539, "carrot", "second"),
-        (540, 549, "carrot", "third"),
-        (550, 559, "banana", "top"),
-        (560, 569, "banana", "second"),
-        (570, 579, "banana", "third"),
-        (580, 589, "eggplant", "top"),
-        (590, 599, "eggplant", "second"),
-        (600, 609, "eggplant", "third"),
-        (610, 619, "pig", "top"),
-        (620, 629, "pig", "second"),
-        (630, 639, "pig", "third"),
-        (640, 649, "cow", "top"),
-        (650, 654, "cow", "second"),
-        (655, 723, "yellow block", "top"),
-        (724, 772, "yellow block", "second"),
-        (773, 821, "yellow block", "third"),
-    ]
-    for start, end, obj, drawer in mapping:
-        if start <= episode_idx <= end:
-            return f"put the {obj} into the {drawer} drawer"
-    return "put the yellow block into the top drawer"
-
 def convert_dataset():
 
     # --- 1. 定义常量和路径 ---
-    original_data_dir = Path("/home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr")
+    original_data_dir = Path("/home/tengenx2204/workspace/mozihao/Data/pick_block")
     new_dataset_root = Path("/home/tengenx2204/workspace/mozihao/Data/")
-    repo_id = "put_item_in_drawer_instr_lerobot"
+    repo_id = "pick_block_10_lerobot"
     new_dataset_path = new_dataset_root / repo_id
 
     print(f"源数据目录: {original_data_dir}")
@@ -180,7 +139,12 @@ def convert_dataset():
                 # elif episode_idx <= 89:  
                 #     prompt = "pick up the red block"
 
-                prompt = build_prompt(episode_idx)
+                if episode_idx <= 29:
+                    prompt = "yellow" * 10
+                elif episode_idx <= 59:  
+                    prompt = "blue" * 10
+                elif episode_idx <= 89:  
+                    prompt = "red" * 10
 
                 frame = {
                     "task": prompt, 

@@ -29,7 +29,7 @@ def main():
     aligns = {}
     
     # 定义通用的流配置
-    width, height, fps = 640, 480, 60
+    width, height, fps = 640, 480, 30
 
     for serial in serial_numbers:
         pipeline = rs.pipeline(context) # 使用同一个 context

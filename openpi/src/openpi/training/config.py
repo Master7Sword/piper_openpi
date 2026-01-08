@@ -607,6 +607,20 @@ class TrainConfig:
 # Use `get_config` if you need to get a config by name in your code.
 _CONFIGS = [
     TrainConfig(
+        name="pi05_pick_block",
+        model=pi0_config.Pi0Config(
+            pi05=True,
+            action_dim=32,
+            action_horizon=50,
+        ),
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/Data/pick_block_lerobot",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/openpi/checkpoints/pi05_base/params"),
+        num_train_steps=30_000,
+        batch_size=32,
+    ),
+    TrainConfig(
         name="pi05_put_item_in_drawer",
         model=pi0_config.Pi0Config(
             pi05=True,
@@ -614,7 +628,7 @@ _CONFIGS = [
             action_horizon=50,
         ),
         data=LeRobotRealDataConfig(
-            repo_id="/home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer",
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_822/",
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/openpi/checkpoints/pi05_base/params"),
         num_train_steps=30_000,

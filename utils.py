@@ -81,9 +81,13 @@ def piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode='joint'
         
     action_chunk = action_chunk[:n_steps]
 
+    smoothed_action = action_chunk.copy()
+    for t in range(1, len(action_chunk) - 1):
+        smoothed_action[t] = (action_chunk[t - 1] + action_chunk[t] + action_chunk[t + 1]) / 3
+    action_chunk = smoothed_action
+
     for i in range(n_steps):
         action = action_chunk[i]
-        # print(f'Dual actions: {action[:14]}')
         # print(f"action {i} right hand: {action[:7]}")
         # print(f"action {i} left hand: {action[7:14]}")
         # time.sleep(1)
