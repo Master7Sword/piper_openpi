@@ -63,27 +63,21 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
 
     # 初始化双臂piper接口
     piper_right = C_PiperInterface_V2("can_arm1")
-    piper_left = C_PiperInterface_V2("can_arm2")
+    # piper_left = C_PiperInterface_V2("can_arm2")
     piper_right.ConnectPort()
-    piper_left.ConnectPort()
-    while not (piper_right.EnablePiper() and piper_left.EnablePiper()):
+    # piper_left.ConnectPort()
+    while not (piper_right.EnablePiper()):
         time.sleep(0.01)
     print("Piper双臂已连接并启动。")
 
     # 双臂初始位置（关节和夹爪）
-    piper_right.MotionCtrl_2(0x01, 0x01, 40, 0x00)
-    piper_left.MotionCtrl_2(0x01, 0x01, 40, 0x00)
-    # piper_right.JointCtrl(41913, 50004, -74840, -3245, 47584, -2760)
-    # piper_left.JointCtrl(-36499, 299, -3872, -54116, 5961, 54201) # open drawer 
-    # piper_right.JointCtrl(41920, 49997, -74840, -3245, 47584, -2760)
-    # piper_left.JointCtrl(-24171, 14878, -4253, -27609, -8485, 17650) # open & close drawer
-    piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
-    piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
-    # piper_right.JointCtrl(29886, 49993, -42882, -3246, 54486, 9274)
-    # piper_left.JointCtrl(-20531,     0, -169, 1265, 23982, 10709) #  pick_block
+    piper_right.MotionCtrl_2(0x01, 0x01, 30, 0x00)
+    # piper_left.MotionCtrl_2(0x01, 0x01, 40, 0x00)
+    piper_right.JointCtrl(46635, 91114, -81951, -16699, 69789, 47623)
+    # piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959)
     piper_right.GripperCtrl(abs(0), 100, 0x01, 0)
-    piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
-    print("Piper双臂初始化完成。")
+    # piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
+    print("Piper臂初始化完成。")
 
     # 加载模型
     policy = load_policy(args.checkpoint_dir, args.config_name)
@@ -109,8 +103,9 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
                 continue
 
             color_frame = np.asanyarray(color_frame.get_data())
-            aligned_img = preprocess_image_for_alignment(color_frame, quality=90)
-            final_img_bgr = cv2.resize(aligned_img, (224, 224), interpolation=cv2.INTER_AREA)
+            # aligned_img = preprocess_image_for_alignment(color_frame, quality=90)
+            # final_img_bgr = cv2.resize(aligned_img, (224, 224), interpolation=cv2.INTER_AREA)
+            final_img_bgr = cv2.resize(color_frame, (224, 224), interpolation=cv2.INTER_AREA)
             final_img_rgb = cv2.cvtColor(final_img_bgr, cv2.COLOR_BGR2RGB)
             all_device_images.append(final_img_rgb)
             # all_device_images.append(color_frame)
@@ -144,7 +139,7 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
         if args.mode == 'joint':    
 
             actions_right = piper_right.GetArmJointMsgs().joint_state
-            actions_left = piper_left.GetArmJointMsgs().joint_state
+            # actions_left = piper_left.GetArmJointMsgs().joint_state
 
             actions_right_arr = np.array([
                 actions_right.joint_1 / 1000.0,
@@ -154,18 +149,18 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
                 actions_right.joint_5 / 1000.0,
                 actions_right.joint_6 / 1000.0,
             ])
-            actions_left_arr = np.array([
-                actions_left.joint_1 / 1000.0,
-                actions_left.joint_2 / 1000.0,
-                actions_left.joint_3 / 1000.0,
-                actions_left.joint_4 / 1000.0,
-                actions_left.joint_5 / 1000.0,
-                actions_left.joint_6 / 1000.0,
-            ])
+            # actions_left_arr = np.array([
+            #     actions_left.joint_1 / 1000.0,
+            #     actions_left.joint_2 / 1000.0,
+            #     actions_left.joint_3 / 1000.0,
+            #     actions_left.joint_4 / 1000.0,
+            #     actions_left.joint_5 / 1000.0,
+            #     actions_left.joint_6 / 1000.0,
+            # ])
         elif args.mode == 'ee':
 
             actions_right = piper_right.GetArmEndPoseMsgs().end_pose
-            actions_left = piper_left.GetArmEndPoseMsgs().end_pose
+            # actions_left = piper_left.GetArmEndPoseMsgs().end_pose
 
             actions_right_arr = np.array([
                 actions_right.X_axis / 1000.0,
@@ -175,32 +170,32 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
                 actions_right.RY_axis / 1000.0,
                 actions_right.RZ_axis / 1000.0,
             ])
-            actions_left_arr = np.array([
-                actions_left.X_axis / 1000.0,
-                actions_left.Y_axis / 1000.0,
-                actions_left.Z_axis / 1000.0,
-                actions_left.RX_axis / 1000.0,
-                actions_left.RY_axis / 1000.0,
-                actions_left.RZ_axis / 1000.0,
-            ])
+            # actions_left_arr = np.array([
+            #     actions_left.X_axis / 1000.0,
+            #     actions_left.Y_axis / 1000.0,
+            #     actions_left.Z_axis / 1000.0,
+            #     actions_left.RX_axis / 1000.0,
+            #     actions_left.RY_axis / 1000.0,
+            #     actions_left.RZ_axis / 1000.0,
+            # ])
 
         gripper_right = piper_right.GetArmGripperMsgs().gripper_state.grippers_angle
-        gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
+        # gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
         gripper_right_arr = np.array([gripper_right / 1000.0])
-        gripper_left_arr = np.array([gripper_left / 1000.0])
+        # gripper_left_arr = np.array([gripper_left / 1000.0])
 
         current_observation_state = np.concatenate((
             actions_right_arr,
             gripper_right_arr,
-            actions_left_arr,
-            gripper_left_arr
+            # actions_left_arr,
+            # gripper_left_arr
         ))
 
-        print("当前观测状态（双臂拼接）:", current_observation_state)
+        print("当前观测状态:", current_observation_state)
 
 
         obs = {
-            'observation/left_image': all_device_images[0],
+            'observation/left_image': np.zeros_like(all_device_images[0]),  # 占位符，保持与双臂接口一致
             'observation/top_image': all_device_images[1],
             'observation/right_image': all_device_images[2],
             'observation/state': current_observation_state,
@@ -210,7 +205,7 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
         action_chunk = infer_actions(obs, policy)
         # print(f"推理动作块形状: {action_chunk.shape}, 类型: {type(action_chunk)}")
 
-        t = piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode=args.mode, n_steps=chunk_sizes)
+        t = piper_step_chunk_single(piper_right, action_chunk, t, mode=args.mode, n_steps=chunk_sizes)
 
     print(f"推理执行完成。")
 
@@ -224,6 +219,6 @@ if __name__ == "__main__":
 
     chunk_sizes = 20
     max_steps = 10000
-    prompt = "put the red car into the top drawer"
+    prompt = "sequentially touch the yellow, blue and red blocks"
 
     main(args, chunk_sizes, prompt, max_steps)

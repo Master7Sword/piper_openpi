@@ -167,3 +167,9 @@ python convert.py
 
 请在convert_dataset()函数的开头修改<original_data_dir>为你希望转换的数据集路径，并将<repo_id>修改为你希望转换后存储数据集的文件夹名。
 
+
+
+# 参考资料
+
+用空间鼠标在LIBERO中采集数据：
+https://blog.csdn.net/qq_40081208/article/details/137675822

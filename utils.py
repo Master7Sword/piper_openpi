@@ -61,7 +61,7 @@ def piper_step_dual(piper_right, piper_left, action, mode='joint'):
            piper_left.GetArmStatus().arm_status.motion_status == 0x01):
         time.sleep(0.0001)
         counter += 1
-        if counter > 250:
+        if counter > 200:
             print("Warning: Piper dual-arm motion taking too long.")
             break
 
@@ -75,7 +75,7 @@ def piper_step_dual(piper_right, piper_left, action, mode='joint'):
 
 
 def piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode='joint', n_steps=50):
-    print(action_chunk.shape , n_steps)
+    print(action_chunk.shape , n_steps, flush=True)
     assert action_chunk.shape[0] >= n_steps
     t = t + n_steps
         
@@ -88,12 +88,78 @@ def piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode='joint'
 
     for i in range(n_steps):
         action = action_chunk[i]
-        # print(f"action {i} right hand: {action[:7]}")
-        # print(f"action {i} left hand: {action[7:14]}")
+        # print(f"action {i} right hand: {action[:7]}", flush=True)
+        # print(f"action {i} left hand: {action[7:14]}", flush=True)
         # time.sleep(1)
         piper_step_dual(piper_right, piper_left, action, mode=mode)
 
     return t
+
+
+
+def piper_step_chunk_single(piper_arm, action_chunk, t, mode='joint', n_steps=50):
+    print(action_chunk.shape , n_steps, flush=True)
+    assert action_chunk.shape[0] >= n_steps
+    t = t + n_steps
+        
+    action_chunk = action_chunk[:n_steps]
+
+    smoothed_action = action_chunk.copy()
+    for t in range(1, len(action_chunk) - 1):
+        smoothed_action[t] = (action_chunk[t - 1] + action_chunk[t] + action_chunk[t + 1]) / 3
+    action_chunk = smoothed_action
+
+    for i in range(n_steps):
+        action = action_chunk[i]
+        # print(f"action {i}: {action[:7]}", flush=True)
+        # time.sleep(1)
+        piper_step_single(piper_arm, action, mode=mode)
+
+    return t
+
+
+def piper_step_single(piper_arm, action, mode='joint'):
+    """
+    处理7维action，控制right臂：
+    action[0:6]: 关节
+    action[6]: 夹爪
+    """
+    start_time = time.time()
+    try:
+        actions = [round(x * 1000) for x in action[0:6]]
+        gripper = round(action[6] * 1000)
+
+        # gripper = 0 if abs(gripper) < 30000 else gripper
+
+        if mode == 'joint':
+            piper_arm.MotionCtrl_2(0x01, 0x01, 30, 0x00)
+            piper_arm.JointCtrl(*actions)
+        elif mode == 'ee':
+            piper_arm.MotionCtrl_2(0x01, 0x00, 20, 0x00)
+            piper_arm.EndPoseCtrl(*actions)
+
+        piper_arm.GripperCtrl(abs(gripper), 500, 0x01, 0)
+        piper_arm.GripperCtrl(abs(gripper), 500, 0x01, 0)
+
+    except Exception as e:
+        raise RuntimeError(f"Piper dual-arm command failed: {e}")
+    
+    counter = 0
+    while (piper_arm.GetArmStatus().arm_status.motion_status == 0x01):
+        time.sleep(0.0001)
+        counter += 1
+        if counter > 500:
+            print("Warning: Piper dual-arm motion taking too long.")
+            break
+
+    elapsed = time.time() - start_time
+    print(f'dual-arm actual fps: {1./elapsed:.4f}')
+
+    fps = 30
+    frame_duration = 1.0 / fps
+    if elapsed < frame_duration:
+        time.sleep(frame_duration - elapsed)
+
 
 
 def preprocess_image_for_alignment(img, quality=90):

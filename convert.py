@@ -42,6 +42,20 @@ def build_prompt(episode_idx: int) -> str:
         (655, 723, "yellow block", "top"),
         (724, 772, "yellow block", "second"),
         (773, 821, "yellow block", "third"),
+        (822, 826, "cow", "third"),
+        (827, 831, "tiger", "top"),
+        (832, 836, "tiger", "second"),
+        (837, 841, "tiger", "third"),
+        (842, 846, "chicken", "top"),
+        (847, 851, "chicken", "second"),
+        (852, 856, "chicken", "third"),
+        (857, 861, "zebra", "top"),
+        (862, 866, "zebra", "second"),
+        (867, 871, "zebra", "third"),
+        (872, 876, "hippo", "top"),
+        (877, 881, "hippo", "second"),
+        (882, 886, "hippo", "third"),
+        (887, 887, "lion", "top")
     ]
     for start, end, obj, drawer in mapping:
         if start <= episode_idx <= end:
@@ -51,9 +65,9 @@ def build_prompt(episode_idx: int) -> str:
 def convert_dataset():
 
     # --- 1. 定义常量和路径 ---
-    original_data_dir = Path("/home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr")
+    original_data_dir = Path("/home/tengenx2204/workspace/mozihao/Data/stack_blocks_retry")
     new_dataset_root = Path("/home/tengenx2204/workspace/mozihao/Data/")
-    repo_id = "put_item_in_drawer_instr_lerobot"
+    repo_id = "stack_blocks_retry_lerobot"
     new_dataset_path = new_dataset_root / repo_id
 
     print(f"源数据目录: {original_data_dir}")
@@ -108,7 +122,7 @@ def convert_dataset():
 
     for episode_idx, demo_path in enumerate(tqdm(demo_paths, desc="转换 Episodes")):
         # 为每个 episode 显式地创建一个干净的 buffer
-        dataset.episode_buffer = dataset.create_episode_buffer(episode_index=episode_idx)
+        # dataset.episode_buffer = dataset.create_episode_buffer(episode_index=episode_idx)
 
         h5_path = demo_path / "robot_data_aligned.h5"
         frames_dir = demo_path / "frames"
@@ -143,44 +157,8 @@ def convert_dataset():
                 padded_state[:dim] = raw_state
                 padded_action[:dim] = raw_action
 
-                # if episode_idx <= 68:
-                #     prompt = "put the yellow block into the top drawer"
-                # elif episode_idx <= 117:
-                #     prompt = "put the yellow block into the second drawer"
-                # elif episode_idx <= 166:
-                #     prompt = "put the yellow block into the third drawer"
-                # elif episode_idx <= 196:
-                #     prompt = "put the red block into the top drawer"
-                # elif episode_idx <= 225:
-                #     prompt = "put the red block into the second drawer"
-                # elif episode_idx <= 256:
-                #     prompt = "put the yellow block into the top drawer"
-                # elif episode_idx <= 285:
-                #     prompt = "put the yellow block into the second drawer"
-
-                # if episode_idx <= 68:
-                #     prompt = ("put the yellow block into the top drawer", "Place the yellow block in the uppermost drawer","Move the yellow item into the first drawer", "Take the yellow cube and deposit it in the top compartment.")
-                # elif episode_idx <= 117:
-                #     prompt = ("put the yellow block into the second drawer", "Place the yellow block in the second drawer (from the top)", "Move the yellow item into the second compartment down", "Take the yellow cube and place it into the second slot")
-                # elif episode_idx <= 166:
-                #     prompt = ("put the yellow block into the third drawer", "Move the yellow item into the third storage slot (from the top)", "Take the yellow cube and deposit it into the third level compartment", "Insert the yellow square into the third drawer down")
-                # elif episode_idx <= 196:
-                #     prompt = ("put the red block into the top drawer", "Place the red block in the uppermost drawer", "Move the red item into the first drawer", "Take the red cube and deposit it in the top compartment")
-                # elif episode_idx <= 225:
-                #     prompt = ("put the red block into the second drawer", "Place the red block in the second drawer (from the top)", "Move the yellow item into the second compartment down", "Take the yellow cube and place it into the second slot")
-                # elif episode_idx <= 256:
-                #     prompt = ("put the yellow block into the top drawer", "Place the yellow block in the uppermost drawer","Move the yellow item into the first drawer", "Take the yellow cube and deposit it in the top compartment.")
-                # elif episode_idx <= 285:
-                #     prompt = ("put the yellow block into the second drawer", "Place the yellow block in the second drawer (from the top)", "Move the yellow item into the second compartment down", "Take the yellow cube and place it into the second slot")
-                
-                # if episode_idx <= 29:
-                #     prompt = "pick up the yellow block"  
-                # elif episode_idx <= 59:  
-                #     prompt = "pick up the blue block"
-                # elif episode_idx <= 89:  
-                #     prompt = "pick up the red block"
-
-                prompt = build_prompt(episode_idx)
+                # prompt = build_prompt(episode_idx)
+                prompt = "stack three blocks"
 
                 frame = {
                     "task": prompt, 
@@ -193,6 +171,7 @@ def convert_dataset():
                 dataset.add_frame(frame)
 
         dataset.save_episode()
+        dataset.hf_dataset = dataset.create_hf_dataset()
 
     print("所有 episodes 转换并保存完毕。")
 

@@ -3,6 +3,27 @@ export ALL_PROXY=127.0.0.1:7897
 
 realsense-viewer
 
+----------------------------------------------------------------------------------------------------------------------
+
+python piper_data_collect.py --task_name stack_blocks --start_episode 0
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/stack_blocks --start_episode 0
+
+python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/stack_blocks/episode31
+
+-------------------------------------------------  moe  ---------------------------------------------------------------------
+python piper_single_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/trashbin/touch_blocks/episode0
+
+python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi_moe/checkpoints/pi05_open_drawer/30000 \
+                            --config_name pi0_moe_real \
+                            --mode joint
+-------------------------------------------------  moe  ---------------------------------------------------------------------
+
+python piper_data_collect.py --task_name stack_blocks_retry --start_episode 0
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/stack_blocks_retry --start_episode 0
+
+python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/stack_blocks_retry/episode31
 
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -10,9 +31,19 @@ realsense-viewer
 30 - 59: blue
 60 - 89: red
 
-python piper_data_collect.py --task_name put_item_in_drawer_instr --start_episode 399
+python piper_data_collect.py --task_name put_item_in_drawer_instr --start_episode 822
 
-python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr --start_episode 399
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr --start_episode 840
+
+python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr/episode830
+
+conda run -n piper_openpi python3 -u \
+  /home/tengenx2204/workspace/mozihao/piper_openpi/infer_piper_vla_runner.py \
+  --sub-host localhost --sub-port 6002 --sub-topic vlm \
+  --camera_host localhost --camera_port 5555 \
+  --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_888/29999 \
+  --config_name pi05_put_item_in_drawer \
+  --mode joint --chunk_sizes 20 --max_steps 10000
 
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -21,7 +52,7 @@ python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_
 
 python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer_only/episode0
 
-python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_822/29999 \
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_888/29999 \
                             --config_name pi05_put_item_in_drawer \
                             --mode joint
 
@@ -76,9 +107,23 @@ instr:
 630-639: pig third
 640-649: cow top
 650-654: cow second
-655-723:  put the yellow block into the top drawer
-724-772 :  put the yellow block into the second drawer
-773-821 :  put the yellow block into the third drawer
+655-723: put the yellow block into the top drawer
+724-772: put the yellow block into the second drawer
+773-821: put the yellow block into the third drawer
+822-826: cow third
+827-831: tiger top
+832-836: tiger second
+837-841: tiger third
+842-846: chicken top
+847-851: chicken second
+852-856: chicken third
+857-861: zebra top
+862-866: zebra second
+867-871: zebra third
+872-876: hippo top
+877-881: hippo second
+882-886: hippo third
+887    : lion top
 
 uv run scripts/compute_norm_stats.py --config-name pi05_put_item_in_drawer_lora
 
@@ -128,4 +173,23 @@ python infer_piper_single_replay_adapter.py --checkpoint_dir /home/tengenx2204/w
     --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer/episode0
 
 
+
+# libero数据采集脚本
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl  --robots Panda
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_bbq_sauce_and_place_it_in_the_basket.bddl  --robots Panda
+
+
+python -m mani_skill.utils.download_demo PlugCharger-v1
+
+
+# libero数据重放脚本：检查数据无误
+python scripts/replay_demonstration.py \                                                                                                                       
+    --hdf5-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/scripts/demonstration_data/robosuite_ln_libero_floor_manipulation_1768894312_8591619_pick_the_alphabet_soup_and_place_it_in_the_basket/demo.hdf5 \                                                                                                
+    --demo-id 0 \                                                                                                                                                
+    --render-mode both
+!WARN: 这个数据回放会使用机械臂的默认初始位置导致错误
+
+
+# libero数据合并脚本：合并多次采集的数据
+python scripts/merge_demonstrations.py --input_files demonstration_data/robosuite_ln_libero_floor_manipulation_1768908859_760377_pick_the_alphabet_soup_and_place_it_in_the_basket/demo.hdf5 /demonstration_data/robosuite_ln_libero_floor_manipulation_1768966617_2394893_pick_the_alphabet_soup_and_place_it_in_the_basket/demo.hdf5 --output_dir collect_data --num_per_file 3 1 --random_seed 42
 
