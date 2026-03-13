@@ -65,9 +65,9 @@ def build_prompt(episode_idx: int) -> str:
 def convert_dataset():
 
     # --- 1. 定义常量和路径 ---
-    original_data_dir = Path("/home/tengenx2204/workspace/mozihao/Data/stack_blocks_retry")
-    new_dataset_root = Path("/home/tengenx2204/workspace/mozihao/Data/")
-    repo_id = "stack_blocks_retry_lerobot"
+    original_data_dir = Path("/home/tengenx2204/workspace/mozihao/Data/open_and_close_drawer")
+    new_dataset_root = Path("/home/tengenx2204/workspace/mozihao/Data")
+    repo_id = "open_and_close_drawer_lerobot"
     new_dataset_path = new_dataset_root / repo_id
 
     print(f"源数据目录: {original_data_dir}")
@@ -95,7 +95,7 @@ def convert_dataset():
 
     features = {
         "observation.images.left": {"shape": img_shape, "dtype": "image"},
-        "observation.images.right": {"shape": img_shape, "dtype": "image"},
+        # "observation.images.right": {"shape": img_shape, "dtype": "image"},
         "observation.images.top": {"shape": img_shape, "dtype": "image"},
         "observation.state": {"shape": (32,), "dtype": "float32"},
         "actions": {"shape": (32,), "dtype": "float32"},
@@ -135,11 +135,11 @@ def convert_dataset():
             num_frames = actions.shape[0]
 
             left_images = sorted(list((frames_dir / "cam0").glob("*.jpg")))
-            right_images = sorted(list((frames_dir / "cam2").glob("*.jpg")))
+            # right_images = sorted(list((frames_dir / "cam2").glob("*.jpg")))
             top_images = sorted(list((frames_dir / "cam1").glob("*.jpg")))  ## pay attention to the order of cameras!!!
 
             # 验证帧数是否一致
-            assert num_frames == len(right_images), f"帧数不匹配: {demo_path}"
+            # assert num_frames == len(right_images), f"帧数不匹配: {demo_path}"
             assert num_frames == len(top_images), f"帧数不匹配: {demo_path}, len(top_images)={len(top_images)}, num_frames={num_frames}"
             assert num_frames == len(states), f"帧数不匹配: {demo_path}"
 
@@ -158,14 +158,17 @@ def convert_dataset():
                 padded_action[:dim] = raw_action
 
                 # prompt = build_prompt(episode_idx)
-                prompt = "stack three blocks"
+                # prompt = "stack three blocks"
+                prompt = "open and close the drawer"
+                # prompt = "sequentially touch green and yellow buttons"
+                # prompt = "put the U-shape block into the U-shape hole"
 
                 frame = {
                     "task": prompt, 
                     "observation.state": padded_state,
                     "actions": padded_action,   
                     "observation.images.left": cv2.cvtColor(cv2.imread(str(left_images[i])), cv2.COLOR_BGR2RGB),        
-                    "observation.images.right": cv2.cvtColor(cv2.imread(str(right_images[i])), cv2.COLOR_BGR2RGB),
+                    # "observation.images.right": cv2.cvtColor(cv2.imread(str(right_images[i])), cv2.COLOR_BGR2RGB),
                     "observation.images.top": cv2.cvtColor(cv2.imread(str(top_images[i])), cv2.COLOR_BGR2RGB),
                 }
                 dataset.add_frame(frame)

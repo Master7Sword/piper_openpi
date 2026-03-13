@@ -5,18 +5,105 @@ realsense-viewer
 
 ----------------------------------------------------------------------------------------------------------------------
 
+python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi0_push_buttons/20000 \
+                            --config_name pi0_push_buttons \
+                            --mode joint
+
+    
+python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi_moe/checkpoints/push_buttons/50000 \
+                            --config_name pi0_moe_push_buttons \
+                            --mode joint
+
+
+python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi0_open_and_close_drawer/29999 \
+                            --config_name pi0_open_and_close_drawer \
+                            --mode joint   
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_single_replay.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi0_open_and_close_drawer/29999 \
+                            --config_name pi0_open_and_close_drawer \
+                            --mode joint  \
+                            --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_and_close_drawer/episode0
+
+----------------------------------------------------------------------------------------------------------------------
+
 python piper_data_collect.py --task_name stack_blocks --start_episode 0
+
+python piper_data_collect.py --task_name open_and_close_drawer --start_episode 0
+
+python piper_data_collect.py --task_name push_buttons --start_episode 0
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/open_and_close_drawer --start_episode 0
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/push_buttons --start_episode 0
 
 python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/stack_blocks --start_episode 0
 
 python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/stack_blocks/episode31
 
--------------------------------------------------  moe  ---------------------------------------------------------------------
-python piper_single_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/trashbin/touch_blocks/episode0
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_stack_blocks_lora/29999 \
+                            --config_name pi05_stack_blocks_lora \
+                            --mode joint
 
-python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi_moe/checkpoints/pi05_open_drawer/30000 \
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_stack_blocks_retry_lora/29999 \
+                            --config_name pi05_stack_blocks_retry_lora \
+                            --mode joint
+
+python piper_data_collect.py --task_name put_block_into_hole --start_episode 0
+
+python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_block_into_hole --start_episode 0
+
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole_lora/29999 \
+                            --config_name pi05_put_block_into_hole_lora \
+                            --mode joint
+
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole_retry_lora/29999 \
+                            --config_name pi05_put_block_into_hole_retry_lora \
+                            --mode joint
+
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole/29999 \
+                            --config_name pi05_put_block_into_hole \
+                            --mode joint
+
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole_retry/29999 \
+                            --config_name pi05_put_block_into_hole_retry \
+                            --mode joint
+
+python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/put_block_into_hole/episode31
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_dual_replay.py   \
+    --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole/29999  \
+    --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/put_block_into_hole/episode1 \
+    --config_name pi05_put_block_into_hole \
+    --mode joint
+
+-------------------------------------------------  moe  ---------------------------------------------------------------------
+python piper_single_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_and_close_drawer/episode0
+
+
+
+python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi0_touch_blocks/29999 \
+                            --config_name pi0_touch_blocks \
+                            --mode joint
+
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi_moe/checkpoints/pi0_touch_blocks/30000 \
                             --config_name pi0_moe_real \
                             --mode joint
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_single.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi_moe/checkpoints/pi0_touch_blocks/25000 \
+                            --config_name pi0_moe_real \
+                            --mode joint
+
+# ---- for replay ----
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_single_replay.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi_moe/checkpoints/pi0_touch_blocks/30000 \
+                            --config_name pi0_moe_real \
+                            --mode joint  \
+                            --replay_episode_dir  /home/tengenx2204/workspace/mozihao/Data/trashbin/touch_blocks/episode0
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python infer_piper_single_replay.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/openpi_moe/checkpoints/pi0_touch_blocks/20000 \
+                            --config_name pi0_moe_real \
+                            --mode joint  \
+                            --replay_episode_dir  /home/tengenx2204/workspace/mozihao/Data/trashbin/touch_blocks/episode0
 -------------------------------------------------  moe  ---------------------------------------------------------------------
 
 python piper_data_collect.py --task_name stack_blocks_retry --start_episode 0
@@ -51,6 +138,10 @@ conda run -n piper_openpi python3 -u \
 python align.py --data_dir /home/tengenx2204/workspace/mozihao/Data/put_item_in_drawer_instr --start_episode 0
 
 python piper_dual_replay.py --replay_episode_dir /home/tengenx2204/workspace/mozihao/Data/open_drawer_only/episode0
+
+python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_888/29999 \
+                            --config_name pi05_put_item_in_drawer \
+                            --mode joint
 
 python infer_piper_dual.py --checkpoint_dir /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_888/29999 \
                             --config_name pi05_put_item_in_drawer \
@@ -179,6 +270,26 @@ python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/
 python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_bbq_sauce_and_place_it_in_the_basket.bddl  --robots Panda
 
 
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_butter_and_place_it_in_the_basket.bddl  --robots Panda
+
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl  --robots Panda
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_cream_cheese_and_place_it_in_the_basket.bddl  --robots Panda
+
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_ketchup_and_place_it_in_the_basket.bddl  --robots Panda
+
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_milk_and_place_it_in_the_basket.bddl  --robots Panda
+
+
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_orange_juice_and_place_it_in_the_basket.bddl  --robots Panda
+
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_salad_dressing_and_place_it_in_the_basket.bddl  --robots Panda
+
+python scripts/collect_demonstration.py --bddl-file /home/tengenx2204/workspace/mozihao/piper_openpi/openpi/third_party/libero/libero/libero/bddl_files/libero_object/pick_up_the_tomato_sauce_and_place_it_in_the_basket.bddl  --robots Panda
+
+
+
+
+
 python -m mani_skill.utils.download_demo PlugCharger-v1
 
 
@@ -193,3 +304,16 @@ python scripts/replay_demonstration.py \
 # libero数据合并脚本：合并多次采集的数据
 python scripts/merge_demonstrations.py --input_files demonstration_data/robosuite_ln_libero_floor_manipulation_1768908859_760377_pick_the_alphabet_soup_and_place_it_in_the_basket/demo.hdf5 /demonstration_data/robosuite_ln_libero_floor_manipulation_1768966617_2394893_pick_the_alphabet_soup_and_place_it_in_the_basket/demo.hdf5 --output_dir collect_data --num_per_file 3 1 --random_seed 42
 
+HDF5 演示数据预处理脚本：
+1. 去掉每个演示的前 N 帧
+2. 将最后一帧复制 M 次接到 episode 的末尾
+
+python preprocess_demonstrations.py \
+        --input_file input.hdf5 \
+        --output_file output.hdf5 \
+        --remove_first_frames 10 \
+        --repeat_last_frames 30
+
+
+lerobot transfer in any4le repo 
+/home/tengenx2204/workspace/mozihao/any4lerobot/libero2lerobot/convert_new.py

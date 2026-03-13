@@ -19,26 +19,26 @@ def main(args):
         print(f"Loaded {num_frames} frames from replay data")
 
         # Init Piper dual arms
-        piper_right = C_PiperInterface_V2("can_arm1")
-        # piper_left = C_PiperInterface_V2("can_arm2")
-        piper_right.ConnectPort()
-        # piper_left.ConnectPort()
-        while not (piper_right.EnablePiper()):
+        # piper_right = C_PiperInterface_V2("can_arm1")
+        piper_left = C_PiperInterface_V2("can_arm2")
+        # piper_right.ConnectPort()
+        piper_left.ConnectPort()
+        while not (piper_left.EnablePiper()):
             time.sleep(0.01)
         print("Piper臂已连接并启动。")
         # piper_right.GripperCtrl(0,1000,0x02, 0)
-        piper_right.GripperCtrl(0,1000,0x01, 0)
+        # piper_right.GripperCtrl(0,1000,0x01, 0)
         # piper_left.GripperCtrl(0,1000,0x02, 0)
-        # piper_left.GripperCtrl(0,1000,0x01, 0)
+        piper_left.GripperCtrl(0,1000,0x01, 0)
 
         # Initialize arms to startup pose
-        piper_right.MotionCtrl_2(0x01, 0x01, 50, 0x00)
-        # piper_left.MotionCtrl_2(0x01, 0x01, 50, 0x00)
+        # piper_right.MotionCtrl_2(0x01, 0x01, 50, 0x00)
+        piper_left.MotionCtrl_2(0x01, 0x01, 50, 0x00)
         # piper_right.JointCtrl(41920, 49997, -74840, -3245, 47584, -2760)
         # piper_left.JointCtrl(-24171, 14878, -4253, -27609, -8485, 17650)
-        piper_right.JointCtrl(46635, 91114, -81951, -16699, 69789, 47623)
-        # piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
-        piper_right.GripperCtrl(abs(0), 500, 0x01, 0)
+        # piper_right.JointCtrl(46635, 91114, -81951, -16699, 69789, 47623)
+        piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
+        # piper_right.GripperCtrl(abs(0), 500, 0x01, 0)
         # piper_left.GripperCtrl(abs(100), 500, 0x01, 0)
         print("Piper双臂初始化完成。")
 
@@ -46,7 +46,8 @@ def main(args):
 
         action_chunk = np.array(joints)
         # print(action_chunk.shape)
-        t = piper_step_chunk_single(piper_right, action_chunk, t, n_steps=action_chunk.shape[0])
+        # t = piper_step_chunk_single(piper_right, action_chunk, t, n_steps=action_chunk.shape[0])
+        t = piper_step_chunk_single(piper_left, action_chunk, t, mode="joint", n_steps=action_chunk.shape[0])
 
         f_robot.close()
         return

@@ -69,7 +69,7 @@ class RealInputs(transforms.DataTransformFn):
             },
             "image_mask": {
                 "base_0_rgb": np.True_,
-                "left_wrist_0_rgb": np.True_,
+                "left_wrist_0_rgb":  np.True_,
                 # Mask any non-existent images with False (if ``mask_padding`` is True).
                 "right_wrist_0_rgb": np.True_,
             },

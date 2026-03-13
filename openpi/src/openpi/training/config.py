@@ -483,7 +483,7 @@ class LeRobotRealDataConfig(DataConfigFactory):
                         "observation/right_image": "observation.images.right",
                         "observation/state": "observation.state",
                         "actions": "actions",
-                        # "prev_actions": "prev_actions",  # 新添加的键
+                        "prev_actions": "prev_actions",  # 新添加的键
                         "prompt": "task",
                     }
                 )
@@ -607,6 +607,33 @@ class TrainConfig:
 # Use `get_config` if you need to get a config by name in your code.
 _CONFIGS = [
     TrainConfig(
+        name="pi0_push_buttons",
+        model=pi0_config.Pi0Config(
+            action_dim=32,
+            action_horizon=20,
+        ),
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi0_push_buttons",
+        ),
+        # weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/Openpi-moe/checkpoints/pi0_base/params"),
+        weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/mozihao/VLA/openpi/checkpoints/pi0_push_buttons/pi0_push_buttons/20000/params"),
+        num_train_steps=30_000,
+        batch_size=32,
+    ),
+    TrainConfig(
+        name="pi0_open_and_close_drawer",
+        model=pi0_config.Pi0Config(
+            action_dim=32,
+            action_horizon=20,
+        ),
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi0_open_and_close_drawer",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/Openpi-moe/checkpoints/pi0_base/params"),
+        num_train_steps=30_000,
+        batch_size=32,
+    ),
+    TrainConfig(
         name="pi05_pick_block",
         model=pi0_config.Pi0Config(
             pi05=True,
@@ -621,6 +648,19 @@ _CONFIGS = [
         batch_size=32,
     ),
     TrainConfig(
+        name="pi0_touch_blocks",
+        model=pi0_config.Pi0Config(
+            action_dim=32,
+            action_horizon=50,
+        ),
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/Data/trashbin/touch_blocks_lerobot_new",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/Openpi-moe/checkpoints/pi0_base/params"),
+        num_train_steps=30_000,
+        batch_size=32,
+    ),
+    TrainConfig(
         name="pi05_put_item_in_drawer",
         model=pi0_config.Pi0Config(
             pi05=True,
@@ -628,7 +668,7 @@ _CONFIGS = [
             action_horizon=50,
         ),
         data=LeRobotRealDataConfig(
-            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_822/",
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_open_drawer_full_888/",
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/openpi/checkpoints/pi05_base/params"),
         num_train_steps=30_000,
@@ -759,6 +799,162 @@ _CONFIGS = [
             action_expert_variant="gemma_300m_lora"
         ).get_freeze_filter(),
         ema_decay=None,
+    ),
+    TrainConfig(
+        name="pi05_stack_blocks_lora",
+        model=pi0_config.Pi0Config(
+            action_dim=32,          
+            action_horizon=50,      
+            pi05=True,              
+            paligemma_variant="gemma_2b_lora",      
+            action_expert_variant="gemma_300m_lora" 
+        ), 
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_stack_blocks_lora",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader(
+            "gs://openpi-assets/checkpoints/pi05_base/params"
+        ),
+        num_train_steps=30_000,
+        batch_size=16, 
+        lr_schedule=_optimizer.CosineDecaySchedule(
+            warmup_steps=1000,
+            peak_lr=2.5e-5,
+            decay_steps=30000,
+            decay_lr=2.5e-6,
+        ),
+        freeze_filter=pi0_config.Pi0Config(
+            action_dim=32,
+            action_horizon=50,
+            pi05=True,
+            paligemma_variant="gemma_2b_lora",
+            action_expert_variant="gemma_300m_lora"
+        ).get_freeze_filter(),
+        ema_decay=None,
+    ),
+    TrainConfig(
+        name="pi05_stack_blocks_retry_lora",
+        model=pi0_config.Pi0Config(
+            action_dim=32,          
+            action_horizon=50,      
+            pi05=True,              
+            paligemma_variant="gemma_2b_lora",      
+            action_expert_variant="gemma_300m_lora" 
+        ), 
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_stack_blocks_retry_lora",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader(
+            "gs://openpi-assets/checkpoints/pi05_base/params"
+        ),
+        num_train_steps=30_000,
+        batch_size=16, 
+        lr_schedule=_optimizer.CosineDecaySchedule(
+            warmup_steps=1000,
+            peak_lr=2.5e-5,
+            decay_steps=30000,
+            decay_lr=2.5e-6,
+        ),
+        freeze_filter=pi0_config.Pi0Config(
+            action_dim=32,
+            action_horizon=50,
+            pi05=True,
+            paligemma_variant="gemma_2b_lora",
+            action_expert_variant="gemma_300m_lora"
+        ).get_freeze_filter(),
+        ema_decay=None,
+    ),
+    TrainConfig(
+        name="pi05_put_block_into_hole_retry_lora",
+        model=pi0_config.Pi0Config(
+            action_dim=32,          
+            action_horizon=50,      
+            pi05=True,              
+            paligemma_variant="gemma_2b_lora",      
+            action_expert_variant="gemma_300m_lora" 
+        ), 
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole_retry_lora",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader(
+            "gs://openpi-assets/checkpoints/pi05_base/params"
+        ),
+        num_train_steps=30_000,
+        batch_size=16, 
+        lr_schedule=_optimizer.CosineDecaySchedule(
+            warmup_steps=1000,
+            peak_lr=2.5e-5,
+            decay_steps=30000,
+            decay_lr=2.5e-6,
+        ),
+        freeze_filter=pi0_config.Pi0Config(
+            action_dim=32,
+            action_horizon=50,
+            pi05=True,
+            paligemma_variant="gemma_2b_lora",
+            action_expert_variant="gemma_300m_lora"
+        ).get_freeze_filter(),
+        ema_decay=None,
+    ),
+    TrainConfig(
+        name="pi05_put_block_into_hole_lora",
+        model=pi0_config.Pi0Config(
+            action_dim=32,          
+            action_horizon=50,      
+            pi05=True,              
+            paligemma_variant="gemma_2b_lora",      
+            action_expert_variant="gemma_300m_lora" 
+        ), 
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole_lora",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader(
+            "gs://openpi-assets/checkpoints/pi05_base/params"
+        ),
+        num_train_steps=30_000,
+        batch_size=16, 
+        lr_schedule=_optimizer.CosineDecaySchedule(
+            warmup_steps=1000,
+            peak_lr=2.5e-5,
+            decay_steps=30000,
+            decay_lr=2.5e-6,
+        ),
+        freeze_filter=pi0_config.Pi0Config(
+            action_dim=32,
+            action_horizon=50,
+            pi05=True,
+            paligemma_variant="gemma_2b_lora",
+            action_expert_variant="gemma_300m_lora"
+        ).get_freeze_filter(),
+        ema_decay=None,
+    ),
+    TrainConfig(
+        name="pi05_put_block_into_hole",
+        model=pi0_config.Pi0Config(
+            pi05=True,
+            action_dim=32,
+            action_horizon=50,
+        ),
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/openpi/checkpoints/pi05_base/params"),
+        num_train_steps=30_000,
+        batch_size=32,
+    ),
+    TrainConfig(
+        name="pi05_put_block_into_hole_retry",
+        model=pi0_config.Pi0Config(
+            pi05=True,
+            action_dim=32,
+            action_horizon=50,
+        ),
+        data=LeRobotRealDataConfig(
+            repo_id="/home/tengenx2204/workspace/mozihao/piper_openpi/openpi/checkpoints/pi05_put_block_into_hole_retry",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader("/HOME/sysu_gbli2/sysu_gbli2xy_1/HDD_POOL/chenjunye/openpi/checkpoints/pi05_base/params"),
+        num_train_steps=30_000,
+        batch_size=32,
     ),
     TrainConfig(
         name="pi0_aloha",

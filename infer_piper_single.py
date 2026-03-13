@@ -7,7 +7,7 @@ import pyrealsense2 as rs
 np.set_printoptions(precision=2)
 
 
-def main(args, chunk_sizes, prompt, max_steps=5000):
+def main(args, chunk_sizes, prompt, max_steps=5000, len_prev_actions = 25):
 
     context = rs.context()
     devices = context.query_devices()
@@ -68,13 +68,15 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
     # piper_left.ConnectPort()
     while not (piper_right.EnablePiper()):
         time.sleep(0.01)
-    print("Piper双臂已连接并启动。")
+    print("Piper右臂已连接并启动。")
 
     # 双臂初始位置（关节和夹爪）
     piper_right.MotionCtrl_2(0x01, 0x01, 30, 0x00)
     # piper_left.MotionCtrl_2(0x01, 0x01, 40, 0x00)
-    piper_right.JointCtrl(46635, 91114, -81951, -16699, 69789, 47623)
+    # piper_right.JointCtrl(46635, 91114, -81951, -16699, 69789, 47623)
     # piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959)
+    piper_right.JointCtrl(37796, 73905, -54213, -1811, 69789, 34758) # push buttons
+    # piper_left.JointCtrl(-30333, 1339, -5378, 781, 11710, -2983) # open and close drawer
     piper_right.GripperCtrl(abs(0), 100, 0x01, 0)
     # piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
     print("Piper臂初始化完成。")
@@ -87,6 +89,8 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
     print("[caution] 在相机窗口激活时按【空格键】可修改 Prompt")
 
     t = 0
+    history_actions = []
+    
     while t < max_steps:
         all_device_images = []
         for serial in active_serials:
@@ -136,13 +140,29 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
             print("继续推理...")
             print("="*40 + "\n")
 
+        elif key == ord('r'):
+            import random
+            print("重置dan臂位置...")
+            time.sleep(1)
+            piper_right.MotionCtrl_2(0x01, 0x01, 40, 0x00)
+            # piper_left.MotionCtrl_2(0x01, 0x01, 40, 0x00)
+            rand_list = [random.randint(-2000, 2000) for _ in range(6)]
+            piper_right.JointCtrl(37796 + rand_list[0], 73905 + rand_list[1], -54213 + rand_list[2], -1811 + rand_list[3], 69789 + rand_list[4], 34758 + rand_list[5]) # push buttons
+            # piper_left.JointCtrl(-30333 + rand_list[0], 1339 + rand_list[1], -5378 + rand_list[2], 781 + rand_list[3], 11710 + rand_list[4], -2983 + rand_list[5]) # open and close drawer
+            piper_right.GripperCtrl(abs(0), 500, 0x01, 0)
+            # piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
+            time.sleep(1)
+            print("臂已重置。")
+            history_actions = []
+            t = 0
+
         if args.mode == 'joint':    
 
             actions_right = piper_right.GetArmJointMsgs().joint_state
             # actions_left = piper_left.GetArmJointMsgs().joint_state
 
             actions_right_arr = np.array([
-                actions_right.joint_1 / 1000.0,
+                actions_right.joint_1 / 1000.0, 
                 actions_right.joint_2 / 1000.0,
                 actions_right.joint_3 / 1000.0,
                 actions_right.joint_4 / 1000.0,
@@ -157,32 +177,37 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
             #     actions_left.joint_5 / 1000.0,
             #     actions_left.joint_6 / 1000.0,
             # ])
-        elif args.mode == 'ee':
+        # elif args.mode == 'ee':
 
-            actions_right = piper_right.GetArmEndPoseMsgs().end_pose
-            # actions_left = piper_left.GetArmEndPoseMsgs().end_pose
+        #     actions_right = piper_right.GetArmEndPoseMsgs().end_pose
+        #     # actions_left = piper_left.GetArmEndPoseMsgs().end_pose
 
-            actions_right_arr = np.array([
-                actions_right.X_axis / 1000.0,
-                actions_right.Y_axis / 1000.0,
-                actions_right.Z_axis / 1000.0,
-                actions_right.RX_axis / 1000.0,
-                actions_right.RY_axis / 1000.0,
-                actions_right.RZ_axis / 1000.0,
-            ])
-            # actions_left_arr = np.array([
-            #     actions_left.X_axis / 1000.0,
-            #     actions_left.Y_axis / 1000.0,
-            #     actions_left.Z_axis / 1000.0,
-            #     actions_left.RX_axis / 1000.0,
-            #     actions_left.RY_axis / 1000.0,
-            #     actions_left.RZ_axis / 1000.0,
-            # ])
+        #     actions_right_arr = np.array([
+        #         actions_right.X_axis / 1000.0,
+        #         actions_right.Y_axis / 1000.0,
+        #         actions_right.Z_axis / 1000.0,
+        #         actions_right.RX_axis / 1000.0,
+        #         actions_right.RY_axis / 1000.0,
+        #         actions_right.RZ_axis / 1000.0,
+        #     ])
+        #     # actions_left_arr = np.array([
+        #     #     actions_left.X_axis / 1000.0,
+        #     #     actions_left.Y_axis / 1000.0,
+        #     #     actions_left.Z_axis / 1000.0,
+        #     #     actions_left.RX_axis / 1000.0,
+        #     #     actions_left.RY_axis / 1000.0,
+        #     #     actions_left.RZ_axis / 1000.0,
+        #     # ])
 
         gripper_right = piper_right.GetArmGripperMsgs().gripper_state.grippers_angle
         # gripper_left = piper_left.GetArmGripperMsgs().gripper_state.grippers_angle
         gripper_right_arr = np.array([gripper_right / 1000.0])
         # gripper_left_arr = np.array([gripper_left / 1000.0])
+        if t ==0: 
+            origin_observation_state = np.concatenate((
+                actions_right_arr, gripper_right_arr), axis=0)
+            # origin_observation_state = np.concatenate((
+            #     actions_left_arr, gripper_left_arr), axis=0)
 
         current_observation_state = np.concatenate((
             actions_right_arr,
@@ -193,19 +218,51 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
 
         print("当前观测状态:", current_observation_state)
 
+        if t == 0:
+            # history_action = np.zeros((1,32))
+            pad = np.zeros((len_prev_actions, 32), dtype=np.float32)
+            obs_state_padded = np.zeros(32, dtype=np.float32)
+            obs_state_padded[:origin_observation_state.shape[0]] = origin_observation_state
+            pad[:] = obs_state_padded
+            history_action = pad
+        elif t < len_prev_actions:
+            print('t=', t)
+            pad_len = len_prev_actions - t
+            # Pad observation_state to shape (pad_len, 32)
+            pad = np.zeros((pad_len, 32), dtype=np.float32)
+            obs_state_padded = np.zeros(32, dtype=np.float32)
+            obs_state_padded[:origin_observation_state.shape[0]] = origin_observation_state
+            pad[:] = obs_state_padded
+            print(f"pad shape {pad.shape}")
+            history_action = np.concatenate(
+                (pad, np.array(history_actions).reshape(-1, 32)),
+                axis=0
+        )
+            print('t < len_prev_actions')
+        else:   
+            print('history_actions shape:', np.array(history_actions[-len_prev_actions:]).shape)
+            history_action = np.array(history_actions[-len_prev_actions:]).reshape(-1, 32)
+            print('t >= len_prev_actions')
+
+        print(f"历史动作形状: {history_action.shape}")
 
         obs = {
-            'observation/left_image': np.zeros_like(all_device_images[0]),  # 占位符，保持与双臂接口一致
+            # 'observation/left_image': all_device_images[0],
             'observation/top_image': all_device_images[1],
             'observation/right_image': all_device_images[2],
             'observation/state': current_observation_state,
             'prompt': current_prompt,
+            'prev_actions': history_action,
         }
 
         action_chunk = infer_actions(obs, policy)
-        # print(f"推理动作块形状: {action_chunk.shape}, 类型: {type(action_chunk)}")
+        print(f"推理动作块形状: {action_chunk.shape}, 类型: {type(action_chunk)}")
+        history_actions.extend(action_chunk[:chunk_sizes])
+        print(f"历史动作长度: {len(history_actions)}")
 
+        print(f"执行动作块..., t=", t)
         t = piper_step_chunk_single(piper_right, action_chunk, t, mode=args.mode, n_steps=chunk_sizes)
+        print(f"当前步骤 t: {t}\n")
 
     print(f"推理执行完成。")
 
@@ -219,6 +276,7 @@ if __name__ == "__main__":
 
     chunk_sizes = 20
     max_steps = 10000
-    prompt = "sequentially touch the yellow, blue and red blocks"
+    len_prev_actions = chunk_sizes
+    prompt = "sequentially touch green and yellow buttons"
 
-    main(args, chunk_sizes, prompt, max_steps)
+    main(args, chunk_sizes, prompt, max_steps, len_prev_actions)

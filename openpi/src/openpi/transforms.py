@@ -357,7 +357,7 @@ class ChoosePromptFromList(DataTransformFn):
             except Exception:
                 pass
         data["prompt"] = chosen
-        print(f"Choose prompt: {chosen}")
+        # print(f"Choose prompt: {chosen}")
         return data
 
 

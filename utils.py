@@ -35,7 +35,7 @@ def piper_step_dual(piper_right, piper_left, action, mode='joint'):
         actions_left = [round(x * 1000) for x in action[7:13]]
         gripper_left = round(action[13] * 1000)
 
-        gripper_right = 0 if abs(gripper_right) < 40000 else gripper_right
+        gripper_right = 0 if abs(gripper_right) < 30000 else gripper_right
         gripper_left = 0 if abs(gripper_left) < 30000 else gripper_left
 
         if mode == 'joint':
@@ -62,11 +62,11 @@ def piper_step_dual(piper_right, piper_left, action, mode='joint'):
         time.sleep(0.0001)
         counter += 1
         if counter > 200:
-            print("Warning: Piper dual-arm motion taking too long.")
+            # print("Warning: Piper dual-arm motion taking too long.")
             break
 
     elapsed = time.time() - start_time
-    print(f'dual-arm actual fps: {1./elapsed:.4f}')
+    # print(f'dual-arm actual fps: {1./elapsed:.4f}')
 
     fps = 60
     frame_duration = 1.0 / fps
@@ -75,15 +75,15 @@ def piper_step_dual(piper_right, piper_left, action, mode='joint'):
 
 
 def piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode='joint', n_steps=50):
-    print(action_chunk.shape , n_steps, flush=True)
+    # print(action_chunk.shape , n_steps, flush=True)
     assert action_chunk.shape[0] >= n_steps
-    t = t + n_steps
+    t += n_steps
         
     action_chunk = action_chunk[:n_steps]
 
     smoothed_action = action_chunk.copy()
-    for t in range(1, len(action_chunk) - 1):
-        smoothed_action[t] = (action_chunk[t - 1] + action_chunk[t] + action_chunk[t + 1]) / 3
+    for i in range(1, len(action_chunk) - 1):
+        smoothed_action[i] = (action_chunk[i - 1] + action_chunk[i] + action_chunk[i + 1]) / 3
     action_chunk = smoothed_action
 
     for i in range(n_steps):
@@ -104,10 +104,10 @@ def piper_step_chunk_single(piper_arm, action_chunk, t, mode='joint', n_steps=50
         
     action_chunk = action_chunk[:n_steps]
 
-    smoothed_action = action_chunk.copy()
-    for t in range(1, len(action_chunk) - 1):
-        smoothed_action[t] = (action_chunk[t - 1] + action_chunk[t] + action_chunk[t + 1]) / 3
-    action_chunk = smoothed_action
+    # smoothed_action = action_chunk.copy()
+    # for t in range(1, len(action_chunk) - 1):
+    #     smoothed_action[t] = (action_chunk[t - 1] + action_chunk[t] + action_chunk[t + 1]) / 3
+    # action_chunk = smoothed_action
 
     for i in range(n_steps):
         action = action_chunk[i]
@@ -132,7 +132,7 @@ def piper_step_single(piper_arm, action, mode='joint'):
         # gripper = 0 if abs(gripper) < 30000 else gripper
 
         if mode == 'joint':
-            piper_arm.MotionCtrl_2(0x01, 0x01, 30, 0x00)
+            piper_arm.MotionCtrl_2(0x01, 0x01, 70, 0x00)
             piper_arm.JointCtrl(*actions)
         elif mode == 'ee':
             piper_arm.MotionCtrl_2(0x01, 0x00, 20, 0x00)
@@ -148,14 +148,14 @@ def piper_step_single(piper_arm, action, mode='joint'):
     while (piper_arm.GetArmStatus().arm_status.motion_status == 0x01):
         time.sleep(0.0001)
         counter += 1
-        if counter > 500:
+        if counter > 150:
             print("Warning: Piper dual-arm motion taking too long.")
             break
 
     elapsed = time.time() - start_time
     print(f'dual-arm actual fps: {1./elapsed:.4f}')
 
-    fps = 30
+    fps = 60
     frame_duration = 1.0 / fps
     if elapsed < frame_duration:
         time.sleep(frame_duration - elapsed)

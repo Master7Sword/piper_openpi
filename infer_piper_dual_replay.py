@@ -46,8 +46,10 @@ def main(args, chunk_sizes=10):
         # piper_left.JointCtrl(-36499, 299, -3872, -54116, 5961, 54201) # open drawer
         # piper_right.JointCtrl(41920, 49997, -74840, -3245, 47584, -2760)
         # piper_left.JointCtrl(-24171, 14878, -4253, -27609, -8485, 17650) # open & close drawer
-        piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
-        piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
+        # piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
+        # piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
+        piper_right.JointCtrl(21147, 12955, -11466, 11979, 27064, -13353)
+        piper_left.JointCtrl(-74934, 0, 42, 0, 22376, -8305) # put_block_into_hole
         piper_right.GripperCtrl(abs(0), 100, 0x01, 0)
         piper_left.GripperCtrl(abs(0), 100, 0x01, 0)
         print("Piper双臂初始化完成。")
@@ -102,12 +104,13 @@ def main(args, chunk_sizes=10):
                 print(f"Replay frame {t} observation state:", current_observation_state)
 
                 obs = {
-                    'observation/left_image': left_img,
+                    # 'observation/left_image': left_img,
                     'observation/top_image': top_img,
                     'observation/right_image': right_img,
                     'observation/state': current_observation_state,
-                    'prompt': "put the yellow block into the second drawer",
+                    # 'prompt': "put the yellow block into the second drawer",
                     # 'prompt' : "open drawer then close drawer"
+                    'prompt' : "put the U-shape block into the U-shape hole"
                 }
 
                 action_chunk = infer_actions(obs, policy)

@@ -3,6 +3,7 @@ import time
 import argparse
 from utils import *
 import pyrealsense2 as rs
+import time
 
 np.set_printoptions(precision=2)
 
@@ -75,13 +76,11 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
     piper_left.MotionCtrl_2(0x01, 0x01, 40, 0x00)
     # piper_right.JointCtrl(41913, 50004, -74840, -3245, 47584, -2760)
     # piper_left.JointCtrl(-36499, 299, -3872, -54116, 5961, 54201) # open drawer 
-    # piper_right.JointCtrl(41920, 49997, -74840, -3245, 47584, -2760)
-    # piper_left.JointCtrl(-24171, 14878, -4253, -27609, -8485, 17650) # open & close drawer
+    # piper_right.JointCtrl(52193, 3432, -17779, 1510, 18815, 14696)
+    # piper_left.JointCtrl(-30333, 1339, -5378, 781, 11710, -2983) # open & close drawer
     piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
     piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
-    # piper_right.JointCtrl(29886, 49993, -42882, -3246, 54486, 9274)
-    # piper_left.JointCtrl(-20531,     0, -169, 1265, 23982, 10709) #  pick_block
-    piper_right.GripperCtrl(abs(0), 100, 0x01, 0)
+    piper_right.GripperCtrl(abs(0), 500, 0x01, 0)
     piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
     print("Piper双臂初始化完成。")
 
@@ -95,6 +94,7 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
     t = 0
     while t < max_steps:
         all_device_images = []
+        start_time = time.time()
         for serial in active_serials:
             pipeline = pipelines[serial]
             align = aligns[serial]
@@ -114,6 +114,8 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
             final_img_rgb = cv2.cvtColor(final_img_bgr, cv2.COLOR_BGR2RGB)
             all_device_images.append(final_img_rgb)
             # all_device_images.append(color_frame)
+
+        print(f"相机帧获取耗时: {time.time() - start_time:.3f}s", flush=True)
 
         for idx, img in enumerate(all_device_images):
             window_name = f"Camera {idx}"
@@ -140,6 +142,21 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
             
             print("继续推理...")
             print("="*40 + "\n")
+
+        elif key == ord('r'):
+            print("重置双臂位置...")
+            time.sleep(3)
+            import random
+            piper_right.MotionCtrl_2(0x01, 0x01, 40, 0x00)
+            piper_left.MotionCtrl_2(0x01, 0x01, 40, 0x00)
+            piper_right.JointCtrl(40036, 3630, -9526, -3140, 17670, -12043)
+            piper_left.JointCtrl(-40543, 177, -104, -87029, -5647, 77959) #  put item in drawer
+            # piper_right.JointCtrl(52193, 3432, -17779, 1510, 18815, 14696)
+            # piper_left.JointCtrl(-30333, 1339, -5378, 781, 11710, -2983) # open & close drawer
+            piper_right.GripperCtrl(abs(0), 500, 0x01, 0)
+            piper_left.GripperCtrl(abs(0), 500, 0x01, 0)
+            time.sleep(6)
+            print("双臂已重置。")
 
         if args.mode == 'joint':    
 
@@ -206,11 +223,13 @@ def main(args, chunk_sizes, prompt, max_steps=5000):
             'observation/state': current_observation_state,
             'prompt': current_prompt,
         }
-
+        start_time = time.time()
         action_chunk = infer_actions(obs, policy)
+        print(f"VLA 推理耗时: {time.time() - start_time:.3f}s", flush=True)
         # print(f"推理动作块形状: {action_chunk.shape}, 类型: {type(action_chunk)}")
-
+        start_time = time.time()
         t = piper_step_chunk_dual(piper_right, piper_left, action_chunk, t, mode=args.mode, n_steps=chunk_sizes)
+        print(f"执行耗时: {time.time() - start_time:.3f}s", flush=True)
 
     print(f"推理执行完成。")
 
@@ -222,8 +241,8 @@ if __name__ == "__main__":
     parser.add_argument('--mode', type=str, required=True, choices=['joint', 'ee'], help='Control mode: joint or ee (default: joint)')
     args = parser.parse_args()
 
-    chunk_sizes = 20
+    chunk_sizes = 30
     max_steps = 10000
-    prompt = "put the red car into the top drawer"
+    prompt = "put the banana into the second drawer"
 
     main(args, chunk_sizes, prompt, max_steps)
